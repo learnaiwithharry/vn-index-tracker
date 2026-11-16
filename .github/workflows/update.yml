@@ -2,8 +2,11 @@ name: Cập nhật dữ liệu và đăng trang
 
 on:
   schedule:
-    # Giờ UTC. 09:37 UTC = 16:37 giờ Việt Nam (sau khi đóng cửa), 13:23 UTC = 20:23 (chạy lại để lấy số liệu bổ sung)
-    - cron: "37 9 * * 1-5"
+    # Giờ UTC = giờ Việt Nam - 7. GitHub có thể chạy trễ hoặc bỏ lỡ một lượt, nên đặt nhiều lượt:
+    # 16:07, 17:07, 18:37, 20:23 giờ Việt Nam, thứ Hai đến thứ Sáu.
+    - cron: "7 9 * * 1-5"
+    - cron: "7 10 * * 1-5"
+    - cron: "37 11 * * 1-5"
     - cron: "23 13 * * 1-5"
   workflow_dispatch:
   push:

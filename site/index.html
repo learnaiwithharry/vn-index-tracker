@@ -96,12 +96,12 @@ details p,details li{max-width:78ch}
 .star{color:var(--s4)}
 .warn{background:rgba(250,178,25,.14);border:1px solid rgba(250,178,25,.5);border-radius:10px;padding:10px 12px;margin-bottom:14px;font-size:13px}
 /* money flow */
-.flow{display:grid;grid-auto-flow:column;grid-auto-columns:172px;gap:8px;overflow-x:auto;padding-bottom:8px;align-items:start}
-.fcol h3{font-size:12px;margin:0;padding:6px 8px;background:var(--wash);border-radius:6px;font-weight:650;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;position:sticky;top:0}
-.fcol .cnt{font-size:11px;color:var(--ink2);padding:3px 8px 5px}
-.fcell{display:grid;grid-template-columns:44px 1fr auto;gap:4px;padding:4px 8px;border-radius:6px;margin-bottom:2px;font-size:12.5px;color:#0b0b0b;font-variant-numeric:tabular-nums}
+.flow{display:grid;grid-auto-flow:column;grid-auto-columns:126px;gap:5px;overflow-x:auto;padding-bottom:8px;align-items:start}
+.fcol h3{font-size:11.5px;margin:0;padding:5px 6px;background:var(--wash);border-radius:6px;font-weight:650;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;position:sticky;top:0}
+.fcol .cnt{font-size:10.5px;color:var(--ink2);padding:3px 6px 4px;white-space:nowrap}
+.fcell{display:grid;grid-template-columns:31px 1fr 45px;gap:3px;padding:3px 5px;border-radius:5px;margin-bottom:2px;font-size:11.5px;letter-spacing:-.01em;color:#0b0b0b;font-variant-numeric:tabular-nums}
 .fcell b{font-weight:600}
-.fcell span:last-child{text-align:right}
+.fcell span{text-align:right}
 .swatch{display:inline-block;width:12px;height:12px;border-radius:3px;vertical-align:-1px;margin-right:5px}
 footer{color:var(--ink2);font-size:12.5px;margin-top:20px}
 footer p{margin:4px 0;max-width:100ch}
@@ -130,7 +130,7 @@ footer p{margin:4px 0;max-width:100ch}
   <div class="card">
     <h2>VN-Index không gồm nhóm Vingroup so với các chỉ số gốc</h2>
     <p class="sub" id="ix-sub"></p>
-    <div class="legend" id="ix-legend"></div>
+    <div class="chips" id="ix-legend"></div>
     <div class="chart" id="ix-chart"></div>
   </div>
   <div class="card">
@@ -172,16 +172,24 @@ footer p{margin:4px 0;max-width:100ch}
   </div>
   <div class="filters"><label>Mốc 0</label><div class="seg" data-base></div></div>
   <div class="card">
-    <h2>Quá khứ: lãi/lỗ lũy kế của từng nhóm ngành kể từ Mốc 0</h2>
+    <h2>Quá khứ: diễn biến của từng nhóm ngành kể từ Mốc 0</h2>
     <p class="sub" id="sc-sub"></p>
+    <div class="filters" style="margin-bottom:10px">
+      <div class="seg" id="sc-view"><button data-v="cum" class="on">Lũy kế từ Mốc 0</button><button data-v="osc">Dao động (luân chuyển)</button></div>
+      <span id="sc-osc">
+        <label>Cửa sổ</label> <div class="seg" id="sc-win"><button data-v="22">1 tháng</button><button data-v="66" class="on">3 tháng</button><button data-v="132">6 tháng</button></div>
+        <div class="seg" id="sc-rel"><button data-v="abs" class="on">Tuyệt đối</button><button data-v="rel">So với VN-Index</button></div>
+      </span>
+    </div>
     <div class="chips" id="sc-chips"></div>
     <div class="chart" id="sc-chart"></div>
     <p class="note">Bấm tên ngành để tô màu (tối đa 8 ngành cùng lúc). Các ngành chưa chọn vẽ bằng nét xám.</p>
   </div>
   <div class="card">
-    <h2>Bảng lãi/lỗ lũy kế theo thời gian kể từ Mốc 0</h2>
-    <p class="sub">Mỗi cột là % thay đổi lũy kế sau N tháng kể từ Mốc 0 (lấy phiên gần nhất trước hoặc đúng ngày tròn tháng).</p>
+    <h2>Bảng lãi/lỗ theo thời gian kể từ Mốc 0</h2>
+    <p class="sub" id="sc-tblsub"></p>
     <div class="filters" style="margin-bottom:10px">
+      <div class="seg" id="sc-tbl"><button data-v="cum" class="on">Lũy kế từ Mốc 0</button><button data-v="per">Từng kỳ riêng lẻ</button></div>
       <div class="seg" id="sc-step"><button data-v="1" class="on">Mỗi tháng</button><button data-v="3">Mỗi quý</button><button data-v="6">Mỗi 6 tháng</button></div>
     </div>
     <div class="tablewrap" style="max-height:640px"><table id="sc-hist"></table></div>
@@ -254,7 +262,7 @@ const fmtP = (v, d=1) => v==null||!isFinite(v) ? "–" : (v>0?"+":"") + v.toFixe
 const dmy = d => d ? `${d.slice(8,10)}/${d.slice(5,7)}/${d.slice(0,4)}` : "";
 const store = { get(k,d){ try{ const v=localStorage.getItem("vnit."+k); return v==null?d:v; }catch(e){ return d; } }, set(k,v){ try{ localStorage.setItem("vnit."+k,v); }catch(e){} } };
 
-let DATA, DATES, LAST, state = { base:null, scMode:"abs", scSort:null, scStep:1, picked:null, smView:"lead", smSort:{k:"g50",dir:-1}, flow:"d" };
+let DATA, DATES, LAST, state = { ixHide:new Set(store.get("ixHide","").split(",").filter(Boolean)), scView:"cum", scWin:66, scRel:"abs", scTbl:"cum", base:null, scMode:"abs", scSort:null, scStep:1, picked:null, smView:"lead", smSort:{k:"g50",dir:-1}, flow:"d" };
 
 /* ---------- date helpers ---------- */
 function idxOnOrBefore(dateStr){ // last index with DATES[i] <= dateStr
@@ -315,6 +323,9 @@ function lineChart(host, {dates, series, height=360, yFmt=v=>v.toFixed(0), tipFm
     for (let i=0;i<n;i++){ const v=s.values[i]; if(v==null){pen=false;continue;} dstr+=(pen?"L":"M")+X(i).toFixed(1)+","+Y(v).toFixed(1); pen=true; }
     if (area){ const first=s.values.findIndex(v=>v!=null);
       root.append(svg("path",{d:dstr+`L${X(n-1).toFixed(1)},${Y(lo)}L${X(first).toFixed(1)},${Y(lo)}Z`,fill:s.color,opacity:.10})); }
+    if (s.fillZero && zero!=null){ let seg=[]; const flush=()=>{ if(seg.length>1){ const z=Y(zero).toFixed(1);
+        root.append(svg("path",{d:"M"+seg.map(q=>q[0].toFixed(1)+","+q[1].toFixed(1)).join("L")+`L${seg[seg.length-1][0].toFixed(1)},${z}L${seg[0][0].toFixed(1)},${z}Z`,fill:s.color,opacity:.13})); } seg=[]; };
+      for (let i=0;i<n;i++){ const v=s.values[i]; if(v==null) flush(); else seg.push([X(i),Y(v)]); } flush(); }
     const p=svg("path",{d:dstr,fill:"none",stroke:s.color,"stroke-width":s.width||2,"stroke-linejoin":"round","stroke-linecap":"round",opacity:s.opacity||1});
     if (s.dash) p.setAttribute("stroke-dasharray",s.dash);
     root.append(p);
@@ -383,8 +394,13 @@ function renderIndex(){
   const defs=[["EXVIN","VN-Index không gồm Vingroup","--s1",2.5],["VNINDEX","VN-Index","--s2",2],["VN30","VN30","--s3",2],["VN100","VN100","--s4",2]];
   const series=defs.map(([k,name,c,w])=>{ const v=rebase(I[k],i0); return {name,color:css(c),values:v,width:w,label:`${name==="VN-Index không gồm Vingroup"?"Không Vingroup":name} ${fmtP(v[v.length-1])}`}; });
   const lg=$("#ix-legend"); lg.textContent="";
-  for (const s of series){ const k=el("span",{class:"k"}); k.style.borderTopColor=s.color; lg.append(el("span",{},k,document.createTextNode(s.name))); }
-  lineChart($("#ix-chart"),{dates:DATES.slice(i0),series,height:380,zero:0,yFmt:v=>(v>0?"+":"")+v.toFixed(0)+"%",tipFmt:v=>fmtP(v,1),endLabels:$("#ix-chart").clientWidth>560});
+  defs.forEach(([k,name],j)=>{ const s=series[j], can=(k==="VN30"||k==="VN100"), on=!state.ixHide.has(k);
+    const b=el(can?"button":"span",{class:"chip"+(on?" on":""),title:can?"Bấm để hiện/ẩn trên biểu đồ":""}); if(!can) b.style.cursor="default";
+    const ln=el("span",{style:`display:inline-block;width:16px;border-top:2px solid ${on?s.color:css("--ghost")}`}); b.append(ln,document.createTextNode(name+(can?(on?"  ✓":""):"")));
+    if(can) b.addEventListener("click",()=>{ if(on) state.ixHide.add(k); else state.ixHide.delete(k); store.set("ixHide",[...state.ixHide].join(",")); renderIndex(); });
+    lg.append(b); });
+  const shown=series.filter((s,j)=>!state.ixHide.has(defs[j][0]));
+  lineChart($("#ix-chart"),{dates:DATES.slice(i0),series:shown,height:380,zero:0,yFmt:v=>(v>0?"+":"")+v.toFixed(0)+"%",tipFmt:v=>fmtP(v,1),endLabels:$("#ix-chart").clientWidth>560});
   // table
   const tb=$("#ix-table"); tb.textContent="";
   const ytd=idxOnOrBefore((+LAST.slice(0,4)-1)+"-12-31");
@@ -440,13 +456,12 @@ function renderSectorNow(){
 const SLOTS=["--s1","--s2","--s3","--s4","--s5","--s6","--s7","--s8"];
 function renderSectorHist(){
   const i0=baseIdx(), dates=DATES.slice(i0), main=DATA.sectors;
-  $("#sc-sub").textContent=`% thay đổi lũy kế kể từ Mốc 0 (${dmy(state.base)} = 0%), đến ${dmy(LAST)}. Chỉ số ngành tính theo vốn hóa, cùng quy ước chỉ số giá với VN-Index.`;
   if (!state.picked){ const p=store.get("picked",null); let names=null; try{ names=p?JSON.parse(p):null; }catch(e){}
     if (!names) names=main.filter(x=>!x.extra).slice(0,4).map(x=>x.name);
     state.picked=new Map(); names.filter(nm=>main.some(x=>x.name===nm)).slice(0,8).forEach((nm,k)=>state.picked.set(nm,k)); }
   const chips=$("#sc-chips"); chips.textContent="";
   const benchStyle={"VN-Index":{color:css("--ink"),width:2.5},"VN30":{color:css("--ink2"),width:1.5,dash:"5 3"},"VN100":{color:css("--muted"),width:1.5,dash:"2 3"}};
-  for (const [name] of BENCH){ const st=benchStyle[name]; const c=el("span",{class:"chip on",style:"cursor:default"}); const k=el("span",{style:`display:inline-block;width:16px;border-top:2px ${st.dash?"dashed":"solid"} ${st.color}`}); c.append(k,document.createTextNode(name)); chips.append(c); }
+  for (const [name,bk] of BENCH){ if(state.scView==="osc"&&(bk!=="VNINDEX"||state.scRel==="rel")) continue; const st=benchStyle[name]; const c=el("span",{class:"chip on",style:"cursor:default"}); const k=el("span",{style:`display:inline-block;width:16px;border-top:2px ${st.dash?"dashed":"solid"} ${st.color}`}); c.append(k,document.createTextNode(name)); chips.append(c); }
   for (const sec of main){
     const on=state.picked.has(sec.name), b=el("button",{class:"chip"+(on?" on":""),title:sec.name});
     const dot=el("span",{class:"dot"}); if(on) dot.style.background=css(SLOTS[state.picked.get(sec.name)]);
@@ -455,20 +470,34 @@ function renderSectorHist(){
       store.set("picked",JSON.stringify([...state.picked.keys()])); renderSectorHist(); });
     chips.append(b);
   }
+  const osc=state.scView==="osc", W=+state.scWin, rel=state.scRel==="rel";
+  $("#sc-osc").style.display=osc?"contents":"none";
+  const winLab={22:"1 tháng (22 phiên)",66:"3 tháng (66 phiên)",132:"6 tháng (132 phiên)"}[W];
+  $("#sc-sub").textContent=osc
+    ? `Mỗi điểm là % thay đổi của ${winLab} ngay trước đó${rel?", trừ đi mức thay đổi của VN-Index cùng kỳ":""}. Đường nằm trên 0 là ngành ${rel?"mạnh hơn thị trường":"tăng"} trong cửa sổ đó, dưới 0 là ${rel?"yếu hơn thị trường":"giảm"}; một ngành đã tăng nhiều rồi quay đầu sẽ hiện rõ ở đây dù số lũy kế vẫn dương.`
+    : `% thay đổi lũy kế kể từ Mốc 0 (${dmy(state.base)} = 0%), đến ${dmy(LAST)}. Chỉ số ngành tính theo vốn hóa, cùng quy ước chỉ số giá với VN-Index.`;
+  const roll=sr=>{ const out=[]; for(let i=i0;i<sr.length;i++){ const a=sr[i-W], b=sr[i]; out.push(i-W<0||a==null||b==null?null:(b/a-1)*100); } return out; };
+  const vniRoll=roll(DATA.idx.VNINDEX);
+  const tr=sr=>{ if(!osc) return rebase(sr,i0); const r=roll(sr); return rel?r.map((v,j)=>v==null||vniRoll[j]==null?null:v-vniRoll[j]):r; };
   const series=[];
   for (const sec of main){ if(sec.extra&&!state.picked.has(sec.name)) continue; const on=state.picked.has(sec.name);
-    series.push({name:sec.name,values:rebase(sec.s,i0),color:on?css(SLOTS[state.picked.get(sec.name)]):css("--ghost"),width:on?2:1,opacity:on?1:.7,z:on?2:0,noTip:!on}); }
-  for (const [name,k] of BENCH) series.push({name,values:rebase(DATA.idx[k],i0),...benchStyle[name],z:3});
+    if(osc&&!on) continue;
+    series.push({name:sec.name,values:tr(sec.s),color:on?css(SLOTS[state.picked.get(sec.name)]):css("--ghost"),width:on?2:1,opacity:on?1:.7,z:on?2:0,noTip:!on,fillZero:osc}); }
+  for (const [name,k] of BENCH){ if(osc&&(rel||k!=="VNINDEX")) continue; series.push({name,values:tr(DATA.idx[k]),...benchStyle[name],z:3}); }
   lineChart($("#sc-chart"),{dates,series,height:440,zero:0,yFmt:v=>(v>0?"+":"")+v.toFixed(0)+"%",tipFmt:v=>fmtP(v,1)});
   // history table
-  const step=+state.scStep, cols=[];
+  const step=+state.scStep, cols=[], per=state.scTbl==="per";
   for (let k=step;;k+=step){ const t=shiftDate(state.base,{months:k}); if(t>LAST) break; cols.push({lab:k+"M",i:idxOnOrBefore(t)}); }
-  cols.push({lab:"Hiện tại",i:DATES.length-1});
+  if (!cols.length || cols[cols.length-1].i<DATES.length-1) cols.push({lab:per?"Kỳ dở dang":"Hiện tại",i:DATES.length-1});
+  cols.forEach((c,j)=>{ c.from=per?(j?cols[j-1].i:i0):i0; });
+  $("#sc-tblsub").textContent=per
+    ? `Mỗi cột là % thay đổi của riêng kỳ đó (${step} tháng), không cộng dồn: thấy được kỳ nào ngành tăng, kỳ nào giảm. Ngày ghi dưới tiêu đề là ngày kết thúc kỳ.`
+    : "Mỗi cột là % thay đổi lũy kế sau N tháng kể từ Mốc 0 (lấy phiên gần nhất trước hoặc đúng ngày tròn tháng).";
   const tb=$("#sc-hist"); tb.textContent="";
   const hr=el("tr",{},el("th",{text:"Nhóm"})); for (const c of cols){ const th=el("th",{text:c.lab}); th.append(el("small",{text:dmy(DATES[c.i]).slice(0,6)+DATES[c.i].slice(2,4)})); hr.append(th); }
   tb.append(el("thead",{},hr)); const body=el("tbody"); tb.append(body);
-  const rows=sectorRows(); const all=[]; const vals=rows.map(r=>cols.map(c=>{ const v=chg(r.s,i0,c.i); all.push(v); return v; })); const cap=colCap(all);
-  rows.forEach((r,ri)=>{ const tr=el("tr",{class:(r.bench?"bench":"")+(r.extra?" extra":"")+(ri===BENCH.length-1?" sep":"")},el("td",{text:r.name,title:r.name})); vals[ri].forEach(v=>tr.append(heatCell(v,cap,0))); body.append(tr); });
+  const rows=sectorRows(); const all=[]; const vals=rows.map(r=>cols.map(c=>{ const v=chg(r.s,c.from,c.i); all.push(v); return v; })); const cap=colCap(all);
+  rows.forEach((r,ri)=>{ const tr=el("tr",{class:(r.bench?"bench":"")+(r.extra?" extra":"")+(ri===BENCH.length-1?" sep":"")},el("td",{text:r.name,title:r.name})); vals[ri].forEach(v=>tr.append(heatCell(v,cap,per?1:0))); body.append(tr); });
 }
 
 /* ---------- TAB: SMA ---------- */
@@ -546,7 +575,7 @@ function renderFlow(){
     const list=codes.map(c=>[c,...P.rows[c]]).sort((a,b)=>b[2]-a[2]||a[0].localeCompare(b[0]));
     const up=list.filter(r=>r[2]>0.005).length, dn=list.filter(r=>r[2]<-0.005).length;
     const col=el("div",{class:"fcol"},el("h3",{text:name,title:name}),el("div",{class:"cnt",text:`▲ ${up} · ▼ ${dn} · – ${list.length-up-dn}`}));
-    for (const [c,p,pct,flag] of list){ const cell=el("div",{class:"fcell",title:`${c}: ${fmtN(p)} (${fmtP(pct,2)})`},el("b",{text:c}),el("span",{text:fmtN(p)}),el("span",{text:fmtP(pct,2).replace("+","")}));
+    for (const [c,p,pct,flag] of list){ const cell=el("div",{class:"fcell",title:`${c}: ${fmtN(p)} (${fmtP(pct,2)})`},el("b",{text:c}),el("span",{text:fmtN(p)}),el("span",{text:pct.toFixed(Math.abs(pct)>=100?0:Math.abs(pct)>=10?1:2)+"%"}));
       cell.style.background=flowColor(pct,flag,cap); col.append(cell); }
     grid.append(col);
   }
@@ -571,6 +600,8 @@ async function boot(){
   $("#asof").textContent=`Dữ liệu đến hết phiên ${dmy(LAST)} · cập nhật lúc ${DATA.meta.generated_at.replace("T"," ").slice(0,16)}`;
   $$("[data-base]").forEach(h=>segInit(h,bases.map(b=>[b,dmy(b)]),state.base,setBase));
   $$("#sc-mode button").forEach(b=>b.addEventListener("click",()=>{ $$("#sc-mode button").forEach(x=>x.classList.toggle("on",x===b)); state.scMode=b.dataset.v; state.scSort=null; renderSectorNow(); }));
+  for (const [id,key] of [["#sc-view","scView"],["#sc-win","scWin"],["#sc-rel","scRel"],["#sc-tbl","scTbl"]])
+    $$(id+" button").forEach(b=>b.addEventListener("click",()=>{ $$(id+" button").forEach(x=>x.classList.toggle("on",x===b)); state[key]=b.dataset.v; renderSectorHist(); }));
   $$("#sc-step button").forEach(b=>b.addEventListener("click",()=>{ $$("#sc-step button").forEach(x=>x.classList.toggle("on",x===b)); state.scStep=b.dataset.v; renderSectorHist(); }));
   $$("#sm-view button").forEach(b=>b.addEventListener("click",()=>{ $$("#sm-view button").forEach(x=>x.classList.toggle("on",x===b)); state.smView=b.dataset.v; renderSmaStocks(); }));
   ["#sm-secsel","#sm-grp"].forEach(s=>$(s).addEventListener("change",renderSmaStocks)); $("#sm-q").addEventListener("input",renderSmaStocks);
