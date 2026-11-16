@@ -51,6 +51,26 @@ show("tcbs bars", lambda: get(f"https://apipubaws.tcbs.com.vn/stock-insight/v2/s
 show("cafef price history", lambda: get("https://cafef.vn/du-lieu/Ajax/PageNew/DataHistory/PriceHistory.ashx?Symbol=VIC&StartDate=&EndDate=&PageIndex=1&PageSize=3"))
 show("yahoo VIC.VN", lambda: get("https://query1.finance.yahoo.com/v8/finance/chart/VIC.VN?range=5d&interval=1d"))
 
+# --- KBS direct
+KB = "https://kbbuddywts.kbsec.com.vn/iis-server/investment"
+show("kbs stock day VIC", lambda: get(f"{KB}/stocks/VIC/data_day?sdate=01-11-2026&edate=16-11-2026"))
+show("kbs stock day VIC 2020", lambda: get(f"{KB}/stocks/VIC/data_day?sdate=25-03-2020&edate=05-04-2020"))
+show("kbs index day VNINDEX", lambda: get(f"{KB}/index/VNINDEX/data_day?sdate=01-11-2026&edate=16-11-2026"))
+show("kbs index day VN30", lambda: get(f"{KB}/index/VN30/data_day?sdate=01-11-2026&edate=16-11-2026"))
+show("kbs index day VN100", lambda: get(f"{KB}/index/VN100/data_day?sdate=01-11-2026&edate=16-11-2026"))
+show("kbs search data", lambda: get(f"{KB}/stock/search/data"))
+show("kbs group 30", lambda: get(f"{KB}/index/30/stocks"))
+show("kbs group 100", lambda: get(f"{KB}/index/100/stocks"))
+show("kbs group HOSE", lambda: get(f"{KB}/index/HOSE/stocks"))
+show("kbs iss board", lambda: post(f"{KB}/stock/iss", {"code": "VIC,VHM,VPL,FPT"}))
+show("kbs profile VIC", lambda: get(f"{KB}/stockinfo/profile/VIC?l=1"))
+show("kbs capital history?", lambda: get(f"{KB}/stockinfo/capital/VIC?l=1"))
+# --- more VNDirect
+show("vnd stocks VPL", lambda: get("https://api-finfo.vndirect.com.vn/v4/stocks?q=code:VPL,VIC"))
+show("vnd index constituents?", lambda: get("https://api-finfo.vndirect.com.vn/v4/stocks?q=indexCode:VN30&size=40&fields=code"))
+show("vnd ratios shares outstanding", lambda: get("https://api-finfo.vndirect.com.vn/v4/ratios/latest?filter=itemCode:51003,51016,57066,51001&where=code:VIC,VHM&order=reportDate&fields=itemCode,value,reportDate,code"))
+show("vnd industry classification", lambda: get("https://api-finfo.vndirect.com.vn/v4/industry_classification?q=industryLevel:2&size=3"))
+
 # --- vnstock library
 def vn():
     import vnstock
