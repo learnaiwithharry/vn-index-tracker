@@ -103,7 +103,8 @@ def fetch_prices(code, start):
         if r.get("close") in (None, 0):
             continue
         val = (r.get("nmValue") or 0) + (r.get("ptValue") or 0)
-        out[r["date"]] = [r["close"], r.get("basicPrice") or "", r.get("ceilingPrice") or "", r.get("floorPrice") or "",
+        fl = {"HOSE": "H", "HNX": "N", "UPCOM": "U"}.get(r.get("floor"), "O")
+        out[r["date"]] = [fl, r["close"], r.get("basicPrice") or "", r.get("ceilingPrice") or "", r.get("floorPrice") or "",
                           round(val / 1e9, 3)]
     return out
 
@@ -134,7 +135,7 @@ def fetch_index(code, start):
 
 
 # ---------------------------------------------------------------- store
-PX_HEADER = ["date", "code", "close", "ref", "ceil", "floor", "value_bn", "mcap_bn"]
+PX_HEADER = ["date", "code", "fl", "close", "ref", "ceil", "floor", "value_bn", "mcap_bn"]
 
 
 def month_path(ym):
@@ -266,7 +267,7 @@ def main():
             m = mc.get(d)
             if m is None and old and old[-1] != "":
                 m = old[-1]
-            by_month[ym][(d, r["code"])] = [fmt(x) for x in v] + [fmt(m) if m is not None else ""]
+            by_month[ym][(d, r["code"])] = [v[0]] + [fmt(x) for x in v[1:]] + [fmt(m) if m is not None else ""]
             n_rows += 1
             if d > max_date:
                 max_date = d
