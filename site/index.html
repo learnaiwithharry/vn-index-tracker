@@ -525,7 +525,7 @@ function renderSmaStocks(){
 }
 
 /* ---------- TAB: FLOW ---------- */
-const FLOW_OPTS=[["d","Ngày"],["w0","Tuần này"],["w1","Tuần trước"],["m0","Tháng này"],["m1","Tháng trước"]];
+const FLOW_OPTS=[["d","Ngày gần nhất"],["w","1 tuần (5 phiên)"],["m","1 tháng (22 phiên)"]];
 function flowColor(pct, flag, cap){
   if (flag===1) return "#c77dff"; if (flag===-1) return "#5fd4f4";
   if (Math.abs(pct)<0.005) return "#fbe870";
@@ -537,8 +537,8 @@ function renderFlow(){
   if (!P){ $("#fl-title").textContent="Chưa có dữ liệu cho kỳ này"; return; }
   const isDay=state.flow==="d";
   $("#fl-lab").textContent=isDay?`Phiên ${P.label}`:`${P.label} (${P.n} phiên)`;
-  $("#fl-title").textContent=isDay?`Biến động giá phiên ${P.label}`:`Biến động giá ${FLOW_OPTS.find(o=>o[0]===state.flow)[1].toLowerCase()}: ${P.label}`;
-  $("#fl-sub").textContent=(isDay?"% thay đổi so với giá tham chiếu. ":"% thay đổi trong kỳ, đã điều chỉnh cho chia tách và cổ tức. ")+`Cột VN30 trước, sau đó các nhóm ngành theo vốn hóa giảm dần (chốt ngày ${dmy(DATA.meta.order_date)}). Giá: nghìn đồng.`;
+  $("#fl-title").textContent=isDay?`Biến động giá phiên ${P.label}`:`Biến động giá ${P.n} phiên gần nhất: ${P.label}`;
+  $("#fl-sub").textContent=(isDay?"% thay đổi so với giá tham chiếu. ":`% thay đổi qua ${P.n} phiên gần nhất (so với giá đóng cửa trước phiên đầu tiên của kỳ), đã điều chỉnh cho chia tách và cổ tức. `)+`Cột VN30 trước, sau đó các nhóm ngành theo vốn hóa giảm dần (chốt ngày ${dmy(DATA.meta.order_date)}). Giá: nghìn đồng.`;
   const bySec=DATA.order.map(()=>[]); for (const s of DATA.stocks) if (P.rows[s.c]) bySec[s.s].push(s.c);
   const colsDef=[["VN30",DATA.vn30.filter(c=>P.rows[c])],...DATA.order.map((nm,k)=>[nm,bySec[k]])];
   const cap=isDay?7:colCap(Object.values(P.rows).map(r=>r[1]));

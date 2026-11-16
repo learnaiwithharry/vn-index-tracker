@@ -261,17 +261,6 @@ def main():
     sec_sma = [{"name": s, "g": sma_gaps(sec_levels[s])} for s in order]
 
     # ---------- Money flow
-    dts = pd.to_datetime(pd.Series(dates))
-    wk = (dts.dt.isocalendar().year.astype(int) * 100 + dts.dt.isocalendar().week.astype(int)).tolist()
-    mo = [d[:7] for d in dates]
-
-    def period_dates(keys, back):
-        uniq = sorted(set(keys))
-        if len(uniq) <= back:
-            return []
-        k = uniq[-1 - back]
-        return [d for d, kk in zip(dates, keys) if kk == k]
-
     def dmy(d):
         return f"{d[8:10]}/{d[5:7]}/{d[:4]}"
 
@@ -292,9 +281,8 @@ def main():
             label = f"{dmy(ds[0])} – {dmy(ds[-1])}"
         return {"label": label, "n": len(ds), "from": ds[0], "to": ds[-1], "rows": rows}
 
-    flow = {"d": period([last], "d"),
-            "w0": period(period_dates(wk, 0), "w"), "w1": period(period_dates(wk, 1), "w"),
-            "m0": period(period_dates(mo, 0), "m"), "m1": period(period_dates(mo, 1), "m")}
+    # Ngày gần nhất, 5 phiên gần nhất (1 tuần), 22 phiên gần nhất (1 tháng)
+    flow = {"d": period([last], "d"), "w": period(dates[-5:], "w"), "m": period(dates[-22:], "m")}
 
     out = {
         "meta": {

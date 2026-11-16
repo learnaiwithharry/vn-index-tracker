@@ -5,7 +5,7 @@ Trang theo dõi cá nhân, tự cập nhật sau mỗi phiên giao dịch:
 - **Index** – VN-Index không gồm nhóm Vingroup (VIC, VHM, VRE, VPL) so với VN-Index, VN30, VN100.
 - **Sector Rotation** – hiệu suất 18 nhóm ngành (ICB cấp 2 theo FiinPro) so với các chỉ số.
 - **Tracking SMA** – vị trí của chỉ số, từng ngành và từng mã so với SMA20, SMA50, SMA200.
-- **Money Flow** – bảng biến động giá theo ngày, tuần, tháng của VN30 và từng ngành.
+- **Money Flow** – bảng biến động giá phiên gần nhất, 5 phiên gần nhất và 22 phiên gần nhất của VN30 và từng ngành.
 
 ## Cách hoạt động
 
