@@ -1,0 +1,63 @@
+name: Cập nhật dữ liệu và đăng trang
+
+on:
+  schedule:
+    # Giờ UTC. 09:37 UTC = 16:37 giờ Việt Nam (sau khi đóng cửa), 13:23 UTC = 20:23 (chạy lại để lấy số liệu bổ sung)
+    - cron: "37 9 * * 1-5"
+    - cron: "23 13 * * 1-5"
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - "scripts/**"
+      - "site/**"
+      - "data/sectors_fiinpro.csv"
+      - ".github/workflows/update.yml"
+
+permissions:
+  contents: write
+  pages: write
+  id-token: write
+
+concurrency:
+  group: update
+  cancel-in-progress: false
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    environment:
+      name: github-pages
+      url: ${{ steps.deploy.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+      - name: Cài thư viện
+        run: pip install -q requests pandas
+      - name: Tải dữ liệu mới
+        id: fetch
+        continue-on-error: true
+        run: python scripts/fetch.py
+      - name: Tính toán
+        run: python scripts/compute.py
+      - name: Lưu dữ liệu vào repo
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add data/store data/sector_order.json
+          git commit -q -m "Cập nhật dữ liệu $(date -u +%Y-%m-%d)" || echo "Không có dữ liệu mới"
+          git pull -q --rebase origin main
+          git push -q origin HEAD:main
+      - uses: actions/upload-pages-artifact@v4
+        with:
+          path: site
+      - id: deploy
+        uses: actions/deploy-pages@v4
+      - name: Báo lỗi nếu không tải được dữ liệu
+        if: steps.fetch.outcome == 'failure'
+        run: |
+          echo "::error::Không tải được dữ liệu mới từ nguồn. Trang vẫn hiển thị dữ liệu cũ."
+          exit 1

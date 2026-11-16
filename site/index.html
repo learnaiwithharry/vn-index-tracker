@@ -1,0 +1,595 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow, noarchive">
+<title>VN-Index Tracker</title>
+<link rel="icon" href="data:,">
+<style>
+:root{
+  color-scheme: light;
+  --page:#f9f9f7; --surface:#fcfcfb; --ink:#0b0b0b; --ink2:#52514e; --muted:#898781;
+  --grid:#e1e0d9; --axis:#c3c2b7; --border:rgba(11,11,11,.10); --wash:rgba(11,11,11,.045);
+  --s1:#2a78d6; --s2:#eb6834; --s3:#1baf7a; --s4:#eda100; --s5:#e87ba4; --s6:#008300; --s7:#6250d6; --s8:#e34948;
+  --up:#0a8f2a; --down:#d03b3b; --upRGB:20,160,60; --downRGB:215,60,60;
+  --good-text:#006300; --bad-text:#b42318; --ghost:#b9b8b0;
+}
+@media (prefers-color-scheme: dark){
+  :root{
+    color-scheme: dark;
+    --page:#0d0d0d; --surface:#1a1a19; --ink:#f0efec; --ink2:#c3c2b7; --muted:#898781;
+    --grid:#2c2c2a; --axis:#383835; --border:rgba(255,255,255,.10); --wash:rgba(255,255,255,.06);
+    --s1:#3987e5; --s2:#d95926; --s3:#199e70; --s4:#c98500; --s5:#d55181; --s6:#0ca30c; --s7:#9085e9; --s8:#e66767;
+    --up:#0ca30c; --down:#e66767; --upRGB:30,175,70; --downRGB:230,90,90;
+    --good-text:#3ecf5a; --bad-text:#f08a8a; --ghost:#55554f;
+  }
+}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:var(--page);color:var(--ink);font:14px/1.45 system-ui,-apple-system,"Segoe UI",sans-serif;-webkit-text-size-adjust:100%}
+.wrap{max-width:1280px;margin:0 auto;padding:16px 16px 48px}
+header{display:flex;flex-wrap:wrap;align-items:baseline;gap:6px 16px;margin-bottom:10px}
+h1{font-size:20px;margin:0;font-weight:650;letter-spacing:-.01em}
+.asof{color:var(--ink2);font-size:13px}
+nav{display:flex;gap:4px;border-bottom:1px solid var(--grid);margin:8px 0 14px;overflow-x:auto}
+nav a{padding:9px 14px;text-decoration:none;color:var(--ink2);font-weight:600;border-bottom:2px solid transparent;white-space:nowrap;margin-bottom:-1px}
+nav a:hover{color:var(--ink)}
+nav a.on{color:var(--ink);border-bottom-color:var(--ink)}
+.filters{display:flex;flex-wrap:wrap;align-items:center;gap:8px 14px;margin:0 0 14px}
+.filters label{color:var(--ink2);font-size:13px}
+.seg{display:inline-flex;border:1px solid var(--border);border-radius:8px;overflow:hidden;background:var(--surface)}
+.seg button{border:0;background:none;color:var(--ink2);padding:6px 11px;font:inherit;font-size:13px;cursor:pointer;border-right:1px solid var(--border)}
+.seg button:last-child{border-right:0}
+.seg button:hover{background:var(--wash)}
+.seg button.on{background:var(--ink);color:var(--surface);font-weight:600}
+select,input[type=search]{font:inherit;font-size:13px;padding:6px 8px;border:1px solid var(--border);border-radius:8px;background:var(--surface);color:var(--ink)}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:16px;margin-bottom:14px}
+.card h2{font-size:15px;margin:0 0 2px;font-weight:650}
+.card .sub{color:var(--ink2);font-size:13px;margin:0 0 12px}
+.tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:12px;margin-bottom:14px}
+.tile{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:14px 16px}
+.tile .lab{color:var(--ink2);font-size:13px}
+.tile .val{font-size:26px;font-weight:650;letter-spacing:-.02em;margin:2px 0}
+.tile .det{color:var(--ink2);font-size:13px}
+.pos{color:var(--good-text)} .neg{color:var(--bad-text)}
+.legend{display:flex;flex-wrap:wrap;gap:6px 16px;margin:0 0 6px;font-size:13px;color:var(--ink2)}
+.legend .k{display:inline-block;width:16px;height:0;border-top:2px solid;vertical-align:middle;margin-right:6px}
+.chart{position:relative;width:100%}
+.chart svg{display:block;width:100%;overflow:visible}
+.chart text{font:11px system-ui,-apple-system,"Segoe UI",sans-serif;fill:var(--muted);font-variant-numeric:tabular-nums}
+.chart .endlab{fill:var(--ink);font-size:12px;font-weight:600}
+.tip{position:absolute;pointer-events:none;background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:8px 10px;font-size:12px;box-shadow:0 4px 16px rgba(0,0,0,.14);min-width:150px;z-index:5;display:none}
+.tip .d{color:var(--ink2);margin-bottom:4px}
+.tip .r{display:flex;align-items:center;gap:6px;white-space:nowrap}
+.tip .r b{margin-left:auto;padding-left:12px;font-variant-numeric:tabular-nums}
+.tip .r i{display:inline-block;width:12px;border-top:2px solid}
+.tablewrap{overflow:auto;max-width:100%;border:1px solid var(--border);border-radius:10px}
+table{border-collapse:separate;border-spacing:0;width:100%;font-size:13px;font-variant-numeric:tabular-nums}
+th,td{padding:6px 10px;text-align:right;white-space:nowrap;border-bottom:1px solid var(--grid)}
+tr:last-child td{border-bottom:0}
+th{position:sticky;top:0;background:var(--surface);color:var(--ink2);font-weight:600;font-size:12px;z-index:2}
+th.sortable{cursor:pointer;user-select:none}
+th.sortable:hover{color:var(--ink)}
+th small{display:block;font-weight:400;color:var(--muted);font-size:10.5px}
+td:first-child,th:first-child{text-align:left;position:sticky;left:0;background:var(--surface);z-index:1;max-width:260px;overflow:hidden;text-overflow:ellipsis}
+th:first-child{z-index:3}
+tr.bench td{font-weight:600}
+tr.sep td{border-bottom:2px solid var(--axis)}
+tr.extra td:first-child{padding-left:22px;color:var(--ink2)}
+td.heat{min-width:62px}
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin:0 0 10px}
+.chip{border:1px solid var(--border);background:var(--surface);color:var(--ink2);border-radius:999px;padding:4px 10px;font:inherit;font-size:12.5px;cursor:pointer;display:inline-flex;align-items:center;gap:6px}
+.chip:hover{background:var(--wash)}
+.chip.on{color:var(--ink);border-color:var(--axis);font-weight:600}
+.chip .dot{width:10px;height:10px;border-radius:50%;background:var(--ghost)}
+.note{color:var(--ink2);font-size:12.5px;margin:10px 0 0}
+details{margin-top:10px;color:var(--ink2);font-size:13px}
+details summary{cursor:pointer;color:var(--ink)}
+details p,details li{max-width:78ch}
+.status{display:inline-flex;align-items:center;gap:5px;font-weight:600}
+.bar3{display:flex;height:8px;border-radius:4px;overflow:hidden;gap:2px;min-width:90px;background:transparent}
+.bar3 span{display:block;height:100%}
+.bar3 .a{background:var(--up)} .bar3 .b{background:var(--down)} .bar3 .n{background:var(--ghost)}
+.breadth{display:grid;grid-template-columns:70px 1fr auto;gap:8px 12px;align-items:center;max-width:720px}
+.breadth .bar3{height:12px;border-radius:6px}
+.star{color:var(--s4)}
+.warn{background:rgba(250,178,25,.14);border:1px solid rgba(250,178,25,.5);border-radius:10px;padding:10px 12px;margin-bottom:14px;font-size:13px}
+/* money flow */
+.flow{display:grid;grid-auto-flow:column;grid-auto-columns:172px;gap:8px;overflow-x:auto;padding-bottom:8px;align-items:start}
+.fcol h3{font-size:12px;margin:0;padding:6px 8px;background:var(--wash);border-radius:6px;font-weight:650;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;position:sticky;top:0}
+.fcol .cnt{font-size:11px;color:var(--ink2);padding:3px 8px 5px}
+.fcell{display:grid;grid-template-columns:44px 1fr auto;gap:4px;padding:4px 8px;border-radius:6px;margin-bottom:2px;font-size:12.5px;color:#0b0b0b;font-variant-numeric:tabular-nums}
+.fcell b{font-weight:600}
+.fcell span:last-child{text-align:right}
+.swatch{display:inline-block;width:12px;height:12px;border-radius:3px;vertical-align:-1px;margin-right:5px}
+footer{color:var(--ink2);font-size:12.5px;margin-top:20px}
+footer p{margin:4px 0;max-width:100ch}
+.hide{display:none}
+@media (max-width:640px){td:first-child,th:first-child{max-width:150px}.wrap{padding:12px 10px 40px}.card{padding:12px}.tile .val{font-size:22px}}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header>
+  <h1>VN-Index Tracker</h1>
+  <span class="asof" id="asof">Đang tải dữ liệu…</span>
+</header>
+<nav id="nav">
+  <a href="#index" data-tab="index">Index</a>
+  <a href="#sector" data-tab="sector">Sector Rotation</a>
+  <a href="#sma" data-tab="sma">Tracking SMA</a>
+  <a href="#flow" data-tab="flow">Money Flow</a>
+</nav>
+<div id="alerts"></div>
+
+<!-- ============ INDEX ============ -->
+<section id="tab-index" class="hide">
+  <div class="filters"><label>Mốc 0</label><div class="seg" data-base></div></div>
+  <div class="tiles" id="ix-tiles"></div>
+  <div class="card">
+    <h2>VN-Index không gồm nhóm Vingroup so với các chỉ số gốc</h2>
+    <p class="sub" id="ix-sub"></p>
+    <div class="legend" id="ix-legend"></div>
+    <div class="chart" id="ix-chart"></div>
+  </div>
+  <div class="card">
+    <h2>Bảng so sánh</h2>
+    <p class="sub">Thay đổi tính đến phiên gần nhất. 1W, 1M… so với giá đóng cửa cách đây 1 tuần, 1 tháng… theo lịch.</p>
+    <div class="tablewrap"><table id="ix-table"></table></div>
+  </div>
+  <div class="card">
+    <h2>Tỷ trọng vốn hóa nhóm Vingroup trong HOSE</h2>
+    <p class="sub" id="ix-wsub"></p>
+    <div class="chart" id="ix-wchart"></div>
+  </div>
+  <div class="card">
+    <h2>Phương pháp và độ tin cậy</h2>
+    <details open>
+      <summary>Cách tính VN-Index không gồm Vingroup</summary>
+      <p>Mỗi phiên, lấy biến động của VN-Index chính thức trừ đi phần đóng góp của bốn mã VIC, VHM, VRE, VPL, rồi chia lại cho phần còn lại của thị trường: r<sub>ex</sub> = (r<sub>VN-Index</sub> − w × r<sub>Vin</sub>) / (1 − w), trong đó w là tỷ trọng vốn hóa của nhóm ở phiên trước. Chuỗi được nối liên tục qua các phiên; tại Mốc 0 chỉ số này được đặt bằng đúng VN-Index, nên số điểm hiển thị trả lời câu hỏi “VN-Index sẽ ở đâu nếu từ mốc đó nhóm Vingroup biến động giống phần còn lại của thị trường”.</p>
+      <p>Giá đã điều chỉnh cho chia tách, cổ phiếu thưởng và cổ tức cổ phiếu. Cổ tức tiền mặt không được cộng lại, giống quy ước của VN-Index. Mã mới niêm yết (ví dụ VPL ngày 13/05/2025) được tính từ phiên giao dịch thứ hai, cũng giống VN-Index.</p>
+    </details>
+    <details>
+      <summary>Kiểm chứng: VN-Index tự tính lại từ từng mã so với VN-Index chính thức</summary>
+      <p>Nếu dữ liệu vốn hóa và giá điều chỉnh là đúng, VN-Index tính lại từ toàn bộ các mã phải gần khớp chỉ số chính thức. Chênh lệch từng năm:</p>
+      <div class="tablewrap" style="max-width:520px"><table id="ix-track"></table></div>
+      <p id="ix-tracknote"></p>
+    </details>
+  </div>
+</section>
+
+<!-- ============ SECTOR ============ -->
+<section id="tab-sector" class="hide">
+  <div class="card">
+    <h2>Hiện tại: hiệu suất các nhóm ngành so với chỉ số</h2>
+    <p class="sub" id="sc-nowsub"></p>
+    <div class="filters" style="margin-bottom:10px">
+      <div class="seg" id="sc-mode"><button data-v="abs" class="on">Tuyệt đối</button><button data-v="rel">So với VN-Index</button></div>
+      <span class="note" style="margin:0">Bấm tiêu đề cột để sắp xếp.</span>
+    </div>
+    <div class="tablewrap"><table id="sc-now"></table></div>
+  </div>
+  <div class="filters"><label>Mốc 0</label><div class="seg" data-base></div></div>
+  <div class="card">
+    <h2>Quá khứ: lãi/lỗ lũy kế của từng nhóm ngành kể từ Mốc 0</h2>
+    <p class="sub" id="sc-sub"></p>
+    <div class="chips" id="sc-chips"></div>
+    <div class="chart" id="sc-chart"></div>
+    <p class="note">Bấm tên ngành để tô màu (tối đa 8 ngành cùng lúc). Các ngành chưa chọn vẽ bằng nét xám.</p>
+  </div>
+  <div class="card">
+    <h2>Bảng lãi/lỗ lũy kế theo thời gian kể từ Mốc 0</h2>
+    <p class="sub">Mỗi cột là % thay đổi lũy kế sau N tháng kể từ Mốc 0 (lấy phiên gần nhất trước hoặc đúng ngày tròn tháng).</p>
+    <div class="filters" style="margin-bottom:10px">
+      <div class="seg" id="sc-step"><button data-v="1" class="on">Mỗi tháng</button><button data-v="3">Mỗi quý</button><button data-v="6">Mỗi 6 tháng</button></div>
+    </div>
+    <div class="tablewrap" style="max-height:640px"><table id="sc-hist"></table></div>
+  </div>
+</section>
+
+<!-- ============ SMA ============ -->
+<section id="tab-sma" class="hide">
+  <div class="card">
+    <h2>Chỉ số so với đường SMA của chính nó</h2>
+    <p class="sub">SMA là trung bình cộng giá đóng cửa của N phiên gần nhất (20, 50, 200 phiên). Số % là khoảng cách giữa giá đóng cửa và SMA.</p>
+    <div class="tablewrap"><table id="sm-idx"></table></div>
+  </div>
+  <div class="card">
+    <h2>Toàn thị trường HOSE</h2>
+    <p class="sub" id="sm-mktsub"></p>
+    <div class="breadth" id="sm-breadth"></div>
+    <p class="note"><span class="swatch" style="background:var(--up)"></span>Trên SMA <span class="swatch" style="background:var(--down);margin-left:12px"></span>Dưới SMA <span class="swatch" style="background:var(--ghost);margin-left:12px"></span>Chưa đủ số phiên</p>
+  </div>
+  <div class="card">
+    <h2>Theo nhóm ngành</h2>
+    <p class="sub" id="sm-secsub"></p>
+    <div class="tablewrap"><table id="sm-sec"></table></div>
+  </div>
+  <div class="card">
+    <h2>Từng mã</h2>
+    <p class="sub" id="sm-stsub"></p>
+    <div class="filters" style="margin-bottom:10px">
+      <div class="seg" id="sm-view"><button data-v="lead" class="on">Vượt trội so với SMA50</button><button data-v="all">Tất cả</button></div>
+      <select id="sm-secsel"></select>
+      <select id="sm-grp"><option value="">Mọi rổ</option><option value="vn30">VN30</option><option value="vn100">VN100</option></select>
+      <input type="search" id="sm-q" placeholder="Tìm mã" size="8">
+    </div>
+    <div class="tablewrap" style="max-height:640px"><table id="sm-st"></table></div>
+  </div>
+</section>
+
+<!-- ============ FLOW ============ -->
+<section id="tab-flow" class="hide">
+  <div class="filters">
+    <div class="seg" id="fl-per"></div>
+    <span class="asof" id="fl-lab"></span>
+  </div>
+  <div class="card">
+    <h2 id="fl-title"></h2>
+    <p class="sub" id="fl-sub"></p>
+    <div class="flow" id="fl-grid"></div>
+    <p class="note" id="fl-legend"></p>
+  </div>
+</section>
+
+<footer id="foot"></footer>
+</div>
+
+<script>
+"use strict";
+const $ = (s, r=document) => r.querySelector(s);
+const $$ = (s, r=document) => [...r.querySelectorAll(s)];
+const el = (tag, attrs={}, ...kids) => {
+  const n = document.createElement(tag);
+  for (const [k,v] of Object.entries(attrs)) { if (k==="class") n.className=v; else if (k==="text") n.textContent=v; else if (k==="style") n.style.cssText=v; else n.setAttribute(k,v); }
+  for (const k of kids) if (k!=null) n.append(k);
+  return n;
+};
+const SVGNS = "http://www.w3.org/2000/svg";
+const svg = (tag, attrs={}) => { const n=document.createElementNS(SVGNS, tag); for (const [k,v] of Object.entries(attrs)) n.setAttribute(k,v); return n; };
+const css = v => getComputedStyle(document.documentElement).getPropertyValue(v).trim();
+const fmtN = (v, d=2) => v==null||!isFinite(v) ? "–" : v.toLocaleString("en-US",{minimumFractionDigits:d,maximumFractionDigits:d});
+const fmtP = (v, d=1) => v==null||!isFinite(v) ? "–" : (v>0?"+":"") + v.toFixed(d) + "%";
+const dmy = d => d ? `${d.slice(8,10)}/${d.slice(5,7)}/${d.slice(0,4)}` : "";
+const store = { get(k,d){ try{ const v=localStorage.getItem("vnit."+k); return v==null?d:v; }catch(e){ return d; } }, set(k,v){ try{ localStorage.setItem("vnit."+k,v); }catch(e){} } };
+
+let DATA, DATES, LAST, state = { base:null, scMode:"abs", scSort:null, scStep:1, picked:null, smView:"lead", smSort:{k:"g50",dir:-1}, flow:"d" };
+
+/* ---------- date helpers ---------- */
+function idxOnOrBefore(dateStr){ // last index with DATES[i] <= dateStr
+  let lo=0, hi=DATES.length-1, ans=-1;
+  while(lo<=hi){ const m=(lo+hi)>>1; if (DATES[m]<=dateStr){ ans=m; lo=m+1; } else hi=m-1; }
+  return ans;
+}
+function shiftDate(dateStr, {days=0, months=0}){
+  const [y,m,d] = dateStr.split("-").map(Number);
+  if (months){
+    const t = new Date(Date.UTC(y, m-1+months, 1));
+    const dim = new Date(Date.UTC(t.getUTCFullYear(), t.getUTCMonth()+1, 0)).getUTCDate();
+    t.setUTCDate(Math.min(d, dim));
+    return t.toISOString().slice(0,10);
+  }
+  return new Date(Date.UTC(y, m-1, d+days)).toISOString().slice(0,10);
+}
+const PERIODS = [["1W",{days:-7}],["2W",{days:-14}],["3W",{days:-21}],["1M",{months:-1}],["3M",{months:-3}],["6M",{months:-6}],["1Y",{months:-12}]];
+function chg(series, i0, i1=series.length-1){ const a=series[i0], b=series[i1]; return (a==null||b==null||i0<0) ? null : (b/a-1)*100; }
+function periodChg(series, spec){ return chg(series, idxOnOrBefore(shiftDate(LAST, spec))); }
+
+/* ---------- line chart ---------- */
+function niceTicks(lo, hi, n=6){
+  const span = hi-lo || 1, step0 = span/n, mag = Math.pow(10, Math.floor(Math.log10(step0)));
+  const step = [1,2,2.5,5,10].map(m=>m*mag).find(s=>span/s<=n) || 10*mag;
+  const out=[]; for (let v=Math.ceil(lo/step)*step; v<=hi+1e-9; v+=step) out.push(+v.toFixed(10));
+  return out;
+}
+function lineChart(host, {dates, series, height=360, yFmt=v=>v.toFixed(0), tipFmt=yFmt, zero=null, endLabels=false, area=false}){
+  host.textContent="";
+  const W = Math.max(320, host.clientWidth), H = height;
+  const labW = endLabels ? 150 : 14;
+  const m = {l:46, r:labW, t:10, b:24}, pw=W-m.l-m.r, ph=H-m.t-m.b, n=dates.length;
+  let lo=Infinity, hi=-Infinity;
+  for (const s of series) for (const v of s.values) if (v!=null){ if(v<lo)lo=v; if(v>hi)hi=v; }
+  if (zero!=null){ lo=Math.min(lo,zero); hi=Math.max(hi,zero); }
+  const pad=(hi-lo)*0.05||1; lo-=pad; hi+=pad;
+  const X = i => m.l + (n<=1?0:i/(n-1))*pw, Y = v => m.t + (1-(v-lo)/(hi-lo))*ph;
+  const root = svg("svg",{viewBox:`0 0 ${W} ${H}`,height:H,role:"img"});
+  const grid=css("--grid"), axis=css("--axis");
+  for (const t of niceTicks(lo,hi)){
+    root.append(svg("line",{x1:m.l,x2:m.l+pw,y1:Y(t),y2:Y(t),stroke:(zero!=null&&Math.abs(t-zero)<1e-9)?axis:grid,"stroke-width":1}));
+    const tx=svg("text",{x:m.l-6,y:Y(t)+4,"text-anchor":"end"}); tx.textContent=yFmt(t); root.append(tx);
+  }
+  // x ticks: years or months
+  const spanDays=(new Date(dates[n-1])-new Date(dates[0]))/864e5;
+  let lastKey=null, lastX=-99;
+  for (let i=0;i<n;i++){
+    const d=dates[i], key = spanDays>700 ? d.slice(0,4) : spanDays>150 ? d.slice(0,7) : (d.slice(0,7)+(d.slice(8)<"16"?"a":"b"));
+    if (key!==lastKey){ lastKey=key; if(i===0 && spanDays>60) continue; const x=X(i);
+      if (x-lastX>46){ lastX=x; const tx=svg("text",{x,y:H-6,"text-anchor":"middle"});
+        tx.textContent = spanDays>700 ? d.slice(0,4) : spanDays>150 ? `${d.slice(5,7)}/${d.slice(2,4)}` : `${d.slice(8,10)}/${d.slice(5,7)}`; root.append(tx);
+        root.append(svg("line",{x1:x,x2:x,y1:m.t+ph,y2:m.t+ph+4,stroke:axis})); } }
+  }
+  const order=[...series].sort((a,b)=>(a.z||0)-(b.z||0));
+  for (const s of order){
+    let dstr="", pen=false;
+    for (let i=0;i<n;i++){ const v=s.values[i]; if(v==null){pen=false;continue;} dstr+=(pen?"L":"M")+X(i).toFixed(1)+","+Y(v).toFixed(1); pen=true; }
+    if (area){ const first=s.values.findIndex(v=>v!=null);
+      root.append(svg("path",{d:dstr+`L${X(n-1).toFixed(1)},${Y(lo)}L${X(first).toFixed(1)},${Y(lo)}Z`,fill:s.color,opacity:.10})); }
+    const p=svg("path",{d:dstr,fill:"none",stroke:s.color,"stroke-width":s.width||2,"stroke-linejoin":"round","stroke-linecap":"round",opacity:s.opacity||1});
+    if (s.dash) p.setAttribute("stroke-dasharray",s.dash);
+    root.append(p);
+  }
+  if (endLabels){
+    const labs=series.filter(s=>s.label).map(s=>{ let i=n-1; while(i>=0&&s.values[i]==null)i--; return {s,y:Y(s.values[i]),y0:Y(s.values[i]),x:X(i)}; }).sort((a,b)=>a.y-b.y);
+    for (let k=1;k<labs.length;k++) if (labs[k].y-labs[k-1].y<15) labs[k].y=labs[k-1].y+15;
+    for (let k=labs.length-2;k>=0;k--) if (labs[k].y>H-m.b-2-(labs.length-1-k)*15) labs[k].y=H-m.b-2-(labs.length-1-k)*15;
+    for (const L of labs){
+      root.append(svg("circle",{cx:L.x,cy:L.y0,r:4,fill:L.s.color,stroke:css("--surface"),"stroke-width":2}));
+      if (Math.abs(L.y-L.y0)>3) root.append(svg("line",{x1:L.x+5,y1:L.y0,x2:L.x+10,y2:L.y,stroke:axis}));
+      const tx=svg("text",{x:L.x+12,y:L.y+4,class:"endlab"}); tx.textContent=L.s.label; root.append(tx);
+    }
+  }
+  // hover layer
+  const cross=svg("line",{y1:m.t,y2:m.t+ph,stroke:axis,"stroke-width":1,visibility:"hidden"});
+  const dots=svg("g",{}); root.append(cross,dots);
+  const hit=svg("rect",{x:m.l,y:m.t,width:pw,height:ph,fill:"transparent"}); root.append(hit);
+  const tip=el("div",{class:"tip"}); host.append(root,tip);
+  const show = ev => {
+    const r=root.getBoundingClientRect(), px=(ev.clientX-r.left)*(W/r.width);
+    const i=Math.max(0,Math.min(n-1,Math.round((px-m.l)/pw*(n-1))));
+    cross.setAttribute("x1",X(i)); cross.setAttribute("x2",X(i)); cross.setAttribute("visibility","visible");
+    dots.textContent=""; tip.textContent=""; tip.append(el("div",{class:"d",text:dmy(dates[i])}));
+    const rows=series.filter(s=>!s.noTip&&s.values[i]!=null).sort((a,b)=>b.values[i]-a.values[i]);
+    for (const s of rows){
+      dots.append(svg("circle",{cx:X(i),cy:Y(s.values[i]),r:3.5,fill:s.color,stroke:css("--surface"),"stroke-width":1.5}));
+      const k=el("i"); k.style.borderTopColor=s.color; if(s.dash) k.style.borderTopStyle="dashed";
+      tip.append(el("div",{class:"r"},k,el("span",{text:s.name}),el("b",{text:tipFmt(s.values[i])})));
+    }
+    tip.style.display="block";
+    const tw=tip.offsetWidth, hx=X(i)*(r.width/W);
+    tip.style.left=(hx+14+tw>r.width ? Math.max(0,hx-tw-14) : hx+14)+"px"; tip.style.top="8px";
+  };
+  hit.addEventListener("pointermove",show); hit.addEventListener("pointerdown",show);
+  hit.addEventListener("pointerleave",()=>{ cross.setAttribute("visibility","hidden"); dots.textContent=""; tip.style.display="none"; });
+}
+
+/* ---------- shared UI ---------- */
+function segInit(host, opts, cur, onPick){
+  host.textContent="";
+  for (const [v,lab] of opts){ const b=el("button",{text:lab,"data-v":v}); if(String(v)===String(cur)) b.className="on";
+    b.addEventListener("click",()=>{ $$("button",host).forEach(x=>x.classList.toggle("on",x===b)); onPick(v); }); host.append(b); }
+}
+function heatCell(v, cap, d=1){
+  const td=el("td",{class:"heat",text:fmtP(v,d)});
+  if (v!=null && isFinite(v) && Math.abs(v)>=0.05){ const a=Math.min(1,Math.abs(v)/cap)*0.55+0.06; td.style.background=`rgba(${css(v>0?"--upRGB":"--downRGB")},${a.toFixed(3)})`; }
+  return td;
+}
+const colCap = vals => { const a=vals.filter(v=>v!=null&&isFinite(v)).map(Math.abs).sort((x,y)=>x-y); return a.length ? Math.max(1, a[Math.floor(a.length*0.9)]) : 1; };
+function baseIdx(){ return DATES.indexOf(state.base); }
+function rebase(series, i0){ const b=series[i0]; return series.slice(i0).map(v=>v==null?null:(v/b-1)*100); }
+
+/* ---------- TAB: INDEX ---------- */
+function renderIndex(){
+  const I=DATA.idx, i0=baseIdx(), n=DATES.length-1, base=state.base;
+  const vni0=I.VNINDEX[i0], ex=chg(I.EXVIN,i0), vn=chg(I.VNINDEX,i0), exPts=vni0*I.EXVIN[n]/I.EXVIN[i0];
+  const tiles=$("#ix-tiles"); tiles.textContent="";
+  const tile=(lab,val,det,cls)=>{ const t=el("div",{class:"tile"},el("div",{class:"lab",text:lab}),el("div",{class:"val"+(cls?" "+cls:""),text:val}),el("div",{class:"det",text:det})); tiles.append(t); };
+  tile("VN-Index không gồm Vingroup", fmtN(exPts), `${fmtP(ex)} kể từ ${dmy(base)}`);
+  tile("VN-Index chính thức", fmtN(I.VNINDEX[n]), `${fmtP(vn)} kể từ ${dmy(base)} (mốc: ${fmtN(vni0)})`);
+  tile("Phần chênh do nhóm Vingroup", `${fmtN(I.VNINDEX[n]-exPts)} điểm`, `VN-Index ${fmtP(vn)} so với ${fmtP(ex)} khi không gồm Vingroup`);
+  const vw=DATA.meta.vin||[];
+  tile("Tỷ trọng Vingroup hiện tại", fmtN(I.VINW[n],1)+"%", vw.map(v=>`${v.code} ${v.w.toFixed(1)}%`).join(" · "));
+  $("#ix-sub").textContent=`% thay đổi lũy kế kể từ Mốc 0 (${dmy(base)} = 0%), đến ${dmy(LAST)}.`;
+  const defs=[["EXVIN","VN-Index không gồm Vingroup","--s1",2.5],["VNINDEX","VN-Index","--s2",2],["VN30","VN30","--s3",2],["VN100","VN100","--s4",2]];
+  const series=defs.map(([k,name,c,w])=>{ const v=rebase(I[k],i0); return {name,color:css(c),values:v,width:w,label:`${name==="VN-Index không gồm Vingroup"?"Không Vingroup":name} ${fmtP(v[v.length-1])}`}; });
+  const lg=$("#ix-legend"); lg.textContent="";
+  for (const s of series){ const k=el("span",{class:"k"}); k.style.borderTopColor=s.color; lg.append(el("span",{},k,document.createTextNode(s.name))); }
+  lineChart($("#ix-chart"),{dates:DATES.slice(i0),series,height:380,zero:0,yFmt:v=>(v>0?"+":"")+v.toFixed(0)+"%",tipFmt:v=>fmtP(v,1),endLabels:$("#ix-chart").clientWidth>560});
+  // table
+  const tb=$("#ix-table"); tb.textContent="";
+  const ytd=idxOnOrBefore((+LAST.slice(0,4)-1)+"-12-31");
+  const head=el("tr",{},el("th",{text:"Chỉ số"}),el("th",{text:"Tại Mốc 0"}),el("th",{text:"Hiện tại"}),el("th",{text:"Từ Mốc 0"}),...PERIODS.filter(p=>p[0]!=="2W"&&p[0]!=="3W").map(p=>el("th",{text:p[0]})),el("th",{text:"YTD"}));
+  tb.append(el("thead",{},head)); const body=el("tbody"); tb.append(body);
+  const rows=[["VN-Index không gồm Vingroup",I.EXVIN,true],["VN-Index",I.VNINDEX],["VN30",I.VN30],["VN100",I.VN100],["Nhóm Vingroup (VIC, VHM, VRE, VPL)",I.VIN,false,true]];
+  for (const [name,s,isEx,isVin] of rows){
+    const tr=el("tr",{class:isEx?"bench":""},el("td",{text:name}));
+    tr.append(el("td",{text:isVin?"–":fmtN(isEx?vni0:s[i0])}), el("td",{text:isVin?"–":fmtN(isEx?exPts:s[n])}));
+    const cells=[chg(s,i0),...PERIODS.filter(p=>p[0]!=="2W"&&p[0]!=="3W").map(p=>periodChg(s,p[1])),chg(s,ytd)];
+    for (const v of cells) tr.append(heatCell(v, 40));
+    body.append(tr);
+  }
+  // weight chart
+  const w=I.VINW.slice(i0);
+  $("#ix-wsub").textContent=`Từ ${fmtN(w[0],1)}% ngày ${dmy(base)} đến ${fmtN(w[w.length-1],1)}% ngày ${dmy(LAST)}. Tỷ trọng càng lớn, biến động của nhóm càng chi phối VN-Index.`;
+  lineChart($("#ix-wchart"),{dates:DATES.slice(i0),series:[{name:"Tỷ trọng Vingroup",color:css("--s1"),values:w}],height:220,zero:0,yFmt:v=>v.toFixed(0)+"%",tipFmt:v=>v.toFixed(1)+"%",area:true});
+  // tracking
+  const tk=$("#ix-track"); tk.textContent="";
+  tk.append(el("thead",{},el("tr",{},el("th",{text:"Năm"}),el("th",{text:"Tự tính lại"}),el("th",{text:"Chính thức"}),el("th",{text:"Chênh lệch"}))));
+  const tbd=el("tbody"); tk.append(tbd);
+  for (const t of DATA.meta.track) tbd.append(el("tr",{},el("td",{text:t.y}),el("td",{text:fmtP(t.rep,2)}),el("td",{text:fmtP(t.off,2)}),el("td",{text:fmtP(t.rep-t.off,2)})));
+  $("#ix-tracknote").textContent=`Phần chênh đến từ các mã đã hủy niêm yết không còn trong danh sách và một số lỗi nhỏ của nguồn dữ liệu (đã tự xử lý ${DATA.meta.anomalies||0} dòng giá tham chiếu bất thường). Chỉ số không gồm Vingroup dùng biến động của VN-Index chính thức nên ít bị ảnh hưởng bởi sai số này.`;
+}
+
+/* ---------- TAB: SECTOR ---------- */
+const BENCH=[["VN-Index","VNINDEX"],["VN30","VN30"],["VN100","VN100"]];
+function sectorRows(){ // [{name, s, bench, extra}]
+  const rows=BENCH.map(([name,k])=>({name,s:DATA.idx[k],bench:true}));
+  const main=DATA.sectors.filter(x=>!x.extra);
+  for (const sec of main){ rows.push({name:sec.name,s:sec.s,n:sec.n});
+    for (const ex of DATA.sectors.filter(x=>x.extra&&x.parent===sec.name)) rows.push({name:ex.name,s:ex.s,extra:true,n:ex.n}); }
+  return rows;
+}
+function renderSectorNow(){
+  $("#sc-nowsub").textContent=`Tính đến ${dmy(LAST)}. 1W, 2W, 3W = 1, 2, 3 tuần gần nhất; 1M, 3M, 6M, 1Y = 1, 3, 6, 12 tháng gần nhất (theo lịch).`;
+  const rows=sectorRows().map(r=>({...r,v:PERIODS.map(p=>periodChg(r.s,p[1]))}));
+  const vni=rows[0].v;
+  if (state.scMode==="rel") for (const r of rows) r.show=r.v.map((x,j)=>x==null||vni[j]==null?null:x-vni[j]); else for (const r of rows) r.show=r.v;
+  const bench=rows.filter(r=>r.bench); let secs=rows.filter(r=>!r.bench);
+  if (state.scSort){ const {j,dir}=state.scSort; const mains=secs.filter(r=>!r.extra).sort((a,b)=>((b.show[j]??-1e9)-(a.show[j]??-1e9))*dir);
+    secs=mains.flatMap(mn=>[mn,...secs.filter(r=>r.extra&&r.name.startsWith(mn.name+" ("))]); }
+  const tb=$("#sc-now"); tb.textContent="";
+  const hr=el("tr",{},el("th",{text:"Nhóm"}),el("th",{text:"Số mã"}));
+  PERIODS.forEach((p,j)=>{ const th=el("th",{class:"sortable",text:p[0]+(state.scSort&&state.scSort.j===j?(state.scSort.dir>0?" ▼":" ▲"):"")});
+    th.addEventListener("click",()=>{ state.scSort = state.scSort&&state.scSort.j===j ? (state.scSort.dir>0?{j,dir:-1}:null) : {j,dir:1}; renderSectorNow(); }); hr.append(th); });
+  tb.append(el("thead",{},hr)); const body=el("tbody"); tb.append(body);
+  const caps=PERIODS.map((_,j)=>colCap(rows.map(r=>r.show[j])));
+  const add=(r,last)=>{ const tr=el("tr",{class:(r.bench?"bench":"")+(r.extra?" extra":"")+(last?" sep":"")},el("td",{text:r.name,title:r.name}),el("td",{text:r.n!=null?r.n:""}));
+    r.show.forEach((v,j)=>tr.append(state.scMode==="rel"&&r===rows[0]?el("td",{text:"–"}):heatCell(v,caps[j]))); body.append(tr); };
+  bench.forEach((r,k)=>add(r,k===bench.length-1)); secs.forEach(r=>add(r));
+}
+const SLOTS=["--s1","--s2","--s3","--s4","--s5","--s6","--s7","--s8"];
+function renderSectorHist(){
+  const i0=baseIdx(), dates=DATES.slice(i0), main=DATA.sectors;
+  $("#sc-sub").textContent=`% thay đổi lũy kế kể từ Mốc 0 (${dmy(state.base)} = 0%), đến ${dmy(LAST)}. Chỉ số ngành tính theo vốn hóa, cùng quy ước chỉ số giá với VN-Index.`;
+  if (!state.picked){ const p=store.get("picked",null); let names=null; try{ names=p?JSON.parse(p):null; }catch(e){}
+    if (!names) names=main.filter(x=>!x.extra).slice(0,4).map(x=>x.name);
+    state.picked=new Map(); names.filter(nm=>main.some(x=>x.name===nm)).slice(0,8).forEach((nm,k)=>state.picked.set(nm,k)); }
+  const chips=$("#sc-chips"); chips.textContent="";
+  const benchStyle={"VN-Index":{color:css("--ink"),width:2.5},"VN30":{color:css("--ink2"),width:1.5,dash:"5 3"},"VN100":{color:css("--muted"),width:1.5,dash:"2 3"}};
+  for (const [name] of BENCH){ const st=benchStyle[name]; const c=el("span",{class:"chip on",style:"cursor:default"}); const k=el("span",{style:`display:inline-block;width:16px;border-top:2px ${st.dash?"dashed":"solid"} ${st.color}`}); c.append(k,document.createTextNode(name)); chips.append(c); }
+  for (const sec of main){
+    const on=state.picked.has(sec.name), b=el("button",{class:"chip"+(on?" on":""),title:sec.name});
+    const dot=el("span",{class:"dot"}); if(on) dot.style.background=css(SLOTS[state.picked.get(sec.name)]);
+    b.append(dot,document.createTextNode(sec.name));
+    b.addEventListener("click",()=>{ if(state.picked.has(sec.name)) state.picked.delete(sec.name); else { const used=new Set(state.picked.values()); const free=[0,1,2,3,4,5,6,7].find(k=>!used.has(k)); if(free==null) return; state.picked.set(sec.name,free); }
+      store.set("picked",JSON.stringify([...state.picked.keys()])); renderSectorHist(); });
+    chips.append(b);
+  }
+  const series=[];
+  for (const sec of main){ if(sec.extra&&!state.picked.has(sec.name)) continue; const on=state.picked.has(sec.name);
+    series.push({name:sec.name,values:rebase(sec.s,i0),color:on?css(SLOTS[state.picked.get(sec.name)]):css("--ghost"),width:on?2:1,opacity:on?1:.7,z:on?2:0,noTip:!on}); }
+  for (const [name,k] of BENCH) series.push({name,values:rebase(DATA.idx[k],i0),...benchStyle[name],z:3});
+  lineChart($("#sc-chart"),{dates,series,height:440,zero:0,yFmt:v=>(v>0?"+":"")+v.toFixed(0)+"%",tipFmt:v=>fmtP(v,1)});
+  // history table
+  const step=+state.scStep, cols=[];
+  for (let k=step;;k+=step){ const t=shiftDate(state.base,{months:k}); if(t>LAST) break; cols.push({lab:k+"M",i:idxOnOrBefore(t)}); }
+  cols.push({lab:"Hiện tại",i:DATES.length-1});
+  const tb=$("#sc-hist"); tb.textContent="";
+  const hr=el("tr",{},el("th",{text:"Nhóm"})); for (const c of cols){ const th=el("th",{text:c.lab}); th.append(el("small",{text:dmy(DATES[c.i]).slice(0,6)+DATES[c.i].slice(2,4)})); hr.append(th); }
+  tb.append(el("thead",{},hr)); const body=el("tbody"); tb.append(body);
+  const rows=sectorRows(); const all=[]; const vals=rows.map(r=>cols.map(c=>{ const v=chg(r.s,i0,c.i); all.push(v); return v; })); const cap=colCap(all);
+  rows.forEach((r,ri)=>{ const tr=el("tr",{class:(r.bench?"bench":"")+(r.extra?" extra":"")+(ri===BENCH.length-1?" sep":"")},el("td",{text:r.name,title:r.name})); vals[ri].forEach(v=>tr.append(heatCell(v,cap,0))); body.append(tr); });
+}
+
+/* ---------- TAB: SMA ---------- */
+const SMAS=["SMA20","SMA50","SMA200"];
+function statusCell(g){ const td=el("td"); if(g==null){ td.textContent="chưa đủ phiên"; td.style.color=css("--muted"); return td; }
+  td.append(el("span",{class:"status "+(g>=0?"pos":"neg"),text:(g>=0?"▲ Trên ":"▼ Dưới ")+fmtP(g,2)})); return td; }
+function countAB(list,j){ let a=0,b=0,n=0; for(const s of list){ const g=s.g[j]; if(g==null)n++; else if(g>=0)a++; else b++; } return {a,b,n}; }
+function bar3({a,b,n}){ const t=a+b+n||1, d=el("div",{class:"bar3",title:`Trên ${a} · Dưới ${b}`+(n?` · Chưa đủ phiên ${n}`:"")});
+  if(a) d.append(el("span",{class:"a",style:`flex:${a}`})); if(b) d.append(el("span",{class:"b",style:`flex:${b}`})); if(n) d.append(el("span",{class:"n",style:`flex:${n}`})); return d; }
+function renderSma(){
+  const S=DATA.stocks, vniG50=DATA.sma.idx[0].g[1];
+  const ti=$("#sm-idx"); ti.textContent="";
+  ti.append(el("thead",{},el("tr",{},el("th",{text:"Chỉ số"}),el("th",{text:"Đóng cửa "+dmy(LAST)}),...SMAS.map(s=>el("th",{text:s})))));
+  const tib=el("tbody"); ti.append(tib);
+  const I=DATA.idx, i0=baseIdx(), exPts=I.VNINDEX[i0]*I.EXVIN[I.EXVIN.length-1]/I.EXVIN[i0];
+  DATA.sma.idx.forEach((x,k)=>{ const isEx=k===DATA.sma.idx.length-1;
+    tib.append(el("tr",{class:"bench"},el("td",{text:x.name+(isEx?` (Mốc 0: ${dmy(state.base)})`:"")}),el("td",{text:fmtN(isEx?exPts:x.close)}),...x.g.map(statusCell))); });
+  $("#sm-mktsub").textContent=`${S.length} mã cổ phiếu đang giao dịch trên HOSE ngày ${dmy(LAST)} (không gồm quỹ và ETF).`;
+  const br=$("#sm-breadth"); br.textContent="";
+  SMAS.forEach((nm,j)=>{ const c=countAB(S,j); br.append(el("b",{text:nm}),bar3(c),el("span",{text:`${c.a} mã trên (${(c.a/(c.a+c.b)*100).toFixed(0)}%) · ${c.b} mã dưới`+(c.n?` · ${c.n} chưa đủ phiên`:"")})); });
+  // sector table
+  $("#sm-secsub").textContent=`Mỗi ô: số mã trên / dưới SMA. Cột cuối là khoảng cách của chỉ số ngành so với SMA50 của chính nó; ★ đánh dấu ngành đang trên SMA50 và có khoảng cách lớn hơn VN-Index (${fmtP(vniG50,2)}).`;
+  const ts=$("#sm-sec"); ts.textContent="";
+  ts.append(el("thead",{},el("tr",{},el("th",{text:"Nhóm ngành"}),el("th",{text:"Số mã"}),...SMAS.flatMap(s=>[el("th",{text:s+" trên / dưới"}),el("th",{text:"% trên"})]),el("th",{text:"Chỉ số ngành vs SMA50"}))));
+  const tsb=el("tbody"); ts.append(tsb);
+  const addRow=(name,list,g50,cls)=>{ const tr=el("tr",{class:cls||""},el("td",{text:name}),el("td",{text:list.length}));
+    SMAS.forEach((_,j)=>{ const c=countAB(list,j); const td=el("td"); td.append(el("div",{style:"display:flex;align-items:center;gap:8px;justify-content:flex-end"},el("span",{text:`${c.a} / ${c.b}`}),bar3(c))); tr.append(td);
+      const pct=c.a+c.b?c.a/(c.a+c.b)*100:null; tr.append(el("td",{text:pct==null?"–":pct.toFixed(0)+"%"})); });
+    const lead=g50!=null&&g50>0&&g50>vniG50; const td=el("td"); td.append(el("span",{class:g50>=0?"pos":"neg",text:(lead?"★ ":"")+fmtP(g50,2)})); tr.append(td); tsb.append(tr); };
+  addRow("Toàn thị trường HOSE",S,vniG50,"bench sep");
+  DATA.order.forEach((name,k)=>addRow(name,S.filter(s=>s.s===k),DATA.sma.sec[k].g[1]));
+  // stock table
+  const sel=$("#sm-secsel"); if(!sel.options.length){ sel.append(el("option",{value:"",text:"Mọi ngành"})); DATA.order.forEach((nm,k)=>sel.append(el("option",{value:k,text:nm}))); }
+  renderSmaStocks();
+}
+function renderSmaStocks(){
+  const vniG50=DATA.sma.idx[0].g[1], secF=$("#sm-secsel").value, grp=$("#sm-grp").value, q=$("#sm-q").value.trim().toUpperCase();
+  const g30=new Set(DATA.vn30), g100=new Set(DATA.vn100);
+  const isLead=s=>s.g[1]!=null&&s.g[1]>0&&s.g[1]>vniG50;
+  let list=DATA.stocks.filter(s=>(state.smView==="all"||isLead(s))&&(secF===""||s.s===+secF)&&(grp===""||(grp==="vn30"?g30:g100).has(s.c))&&(!q||s.c.includes(q)));
+  const key={c:s=>s.c,sec:s=>DATA.order[s.s],p:s=>s.p,m:s=>s.m,g20:s=>s.g[0],g50:s=>s.g[1],g200:s=>s.g[2]}[state.smSort.k];
+  list.sort((a,b)=>{ const x=key(a),y=key(b); if(x==null) return 1; if(y==null) return -1; return (x<y?-1:x>y?1:0)*state.smSort.dir; });
+  const nLead=DATA.stocks.filter(isLead).length;
+  $("#sm-stsub").textContent=`“Vượt trội” = mã đang trên SMA50 và khoảng cách tới SMA50 lớn hơn khoảng cách của VN-Index (${fmtP(vniG50,2)}): ${nLead}/${DATA.stocks.length} mã. Đang hiển thị ${list.length} mã.`;
+  const t=$("#sm-st"); t.textContent="";
+  const cols=[["c","Mã"],["sec","Ngành"],["p","Giá"],["m","Vốn hóa (tỷ)"],["g20","vs SMA20"],["g50","vs SMA50"],["g200","vs SMA200"]];
+  const hr=el("tr"); for (const [k,lab] of cols){ const th=el("th",{class:"sortable",text:lab+(state.smSort.k===k?(state.smSort.dir<0?" ▼":" ▲"):"")}); if(k==="sec") th.style.textAlign="left";
+    th.addEventListener("click",()=>{ state.smSort=state.smSort.k===k?{k,dir:-state.smSort.dir}:{k,dir:(k==="c"||k==="sec")?1:-1}; renderSmaStocks(); }); hr.append(th); }
+  t.append(el("thead",{},hr)); const body=el("tbody"); t.append(body);
+  const caps=[0,1,2].map(j=>colCap(DATA.stocks.map(s=>s.g[j])));
+  for (const s of list){ const tr=el("tr",{},el("td",{title:s.n}),el("td",{text:DATA.order[s.s],style:"text-align:left"}),el("td",{text:fmtN(s.p)}),el("td",{text:s.m==null?"–":fmtN(s.m,0)}));
+    tr.firstChild.append(el("b",{text:s.c}),isLead(s)?el("span",{class:"star",text:" ★"}):null);
+    s.g.forEach((g,j)=>tr.append(heatCell(g,caps[j]))); body.append(tr); }
+}
+
+/* ---------- TAB: FLOW ---------- */
+const FLOW_OPTS=[["d","Ngày"],["w0","Tuần này"],["w1","Tuần trước"],["m0","Tháng này"],["m1","Tháng trước"]];
+function flowColor(pct, flag, cap){
+  if (flag===1) return "#c77dff"; if (flag===-1) return "#5fd4f4";
+  if (Math.abs(pct)<0.005) return "#fbe870";
+  const t=Math.min(1,Math.abs(pct)/cap), step=t>0.66?2:t>0.33?1:0;
+  return pct>0 ? ["#c9f2a3","#8be25c","#3ed61f"][step] : ["#f9c1bb","#f59186","#ee6257"][step];
+}
+function renderFlow(){
+  const P=DATA.flow[state.flow]; const grid=$("#fl-grid"); grid.textContent="";
+  if (!P){ $("#fl-title").textContent="Chưa có dữ liệu cho kỳ này"; return; }
+  const isDay=state.flow==="d";
+  $("#fl-lab").textContent=isDay?`Phiên ${P.label}`:`${P.label} (${P.n} phiên)`;
+  $("#fl-title").textContent=isDay?`Biến động giá phiên ${P.label}`:`Biến động giá ${FLOW_OPTS.find(o=>o[0]===state.flow)[1].toLowerCase()}: ${P.label}`;
+  $("#fl-sub").textContent=(isDay?"% thay đổi so với giá tham chiếu. ":"% thay đổi trong kỳ, đã điều chỉnh cho chia tách và cổ tức. ")+`Cột VN30 trước, sau đó các nhóm ngành theo vốn hóa giảm dần (chốt ngày ${dmy(DATA.meta.order_date)}). Giá: nghìn đồng.`;
+  const bySec=DATA.order.map(()=>[]); for (const s of DATA.stocks) if (P.rows[s.c]) bySec[s.s].push(s.c);
+  const colsDef=[["VN30",DATA.vn30.filter(c=>P.rows[c])],...DATA.order.map((nm,k)=>[nm,bySec[k]])];
+  const cap=isDay?7:colCap(Object.values(P.rows).map(r=>r[1]));
+  for (const [name,codes] of colsDef){
+    const list=codes.map(c=>[c,...P.rows[c]]).sort((a,b)=>b[2]-a[2]||a[0].localeCompare(b[0]));
+    const up=list.filter(r=>r[2]>0.005).length, dn=list.filter(r=>r[2]<-0.005).length;
+    const col=el("div",{class:"fcol"},el("h3",{text:name,title:name}),el("div",{class:"cnt",text:`▲ ${up} · ▼ ${dn} · – ${list.length-up-dn}`}));
+    for (const [c,p,pct,flag] of list){ const cell=el("div",{class:"fcell",title:`${c}: ${fmtN(p)} (${fmtP(pct,2)})`},el("b",{text:c}),el("span",{text:fmtN(p)}),el("span",{text:fmtP(pct,2).replace("+","")}));
+      cell.style.background=flowColor(pct,flag,cap); col.append(cell); }
+    grid.append(col);
+  }
+  const lg=$("#fl-legend"); lg.textContent="";
+  const items=isDay?[["#c77dff","Tăng hết biên độ (trần)"],["#3ed61f","Tăng"],["#fbe870","Đứng giá"],["#ee6257","Giảm"],["#5fd4f4","Giảm hết biên độ (sàn)"]]:[["#3ed61f","Tăng"],["#fbe870","Đứng giá"],["#ee6257","Giảm"]];
+  for (const [c,t] of items){ const sw=el("span",{class:"swatch"}); sw.style.background=c; lg.append(sw,el("span",{text:t,style:"margin-right:14px"})); }
+  if(!isDay) lg.append(document.createTextNode("Màu càng đậm, biến động càng mạnh. Màu trần/sàn chỉ áp dụng cho bảng ngày."));
+}
+
+/* ---------- boot ---------- */
+const RENDER={index:renderIndex, sector:()=>{renderSectorNow();renderSectorHist();}, sma:renderSma, flow:renderFlow};
+function currentTab(){ const h=location.hash.replace("#",""); return RENDER[h]?h:"index"; }
+function showTab(){ const t=currentTab(); $$("nav a").forEach(a=>a.classList.toggle("on",a.dataset.tab===t)); $$("section[id^=tab-]").forEach(s=>s.classList.toggle("hide",s.id!=="tab-"+t)); if(DATA) RENDER[t](); }
+function setBase(b){ state.base=b; store.set("base",b); $$("[data-base]").forEach(h=>$$("button",h).forEach(x=>x.classList.toggle("on",x.dataset.v===b))); RENDER[currentTab()](); }
+async function boot(){
+  try{
+    const r=await fetch("data.json?t="+Date.now(),{cache:"no-store"}); if(!r.ok) throw new Error("HTTP "+r.status);
+    DATA=await r.json();
+  }catch(e){ $("#asof").textContent="Không tải được dữ liệu (data.json): "+e.message; return; }
+  DATES=DATA.dates; LAST=DATA.meta.last_date;
+  const bases=DATA.meta.bases; const saved=store.get("base",bases[0]); state.base=bases.includes(saved)?saved:bases[0];
+  $("#asof").textContent=`Dữ liệu đến hết phiên ${dmy(LAST)} · cập nhật lúc ${DATA.meta.generated_at.replace("T"," ").slice(0,16)}`;
+  $$("[data-base]").forEach(h=>segInit(h,bases.map(b=>[b,dmy(b)]),state.base,setBase));
+  $$("#sc-mode button").forEach(b=>b.addEventListener("click",()=>{ $$("#sc-mode button").forEach(x=>x.classList.toggle("on",x===b)); state.scMode=b.dataset.v; state.scSort=null; renderSectorNow(); }));
+  $$("#sc-step button").forEach(b=>b.addEventListener("click",()=>{ $$("#sc-step button").forEach(x=>x.classList.toggle("on",x===b)); state.scStep=b.dataset.v; renderSectorHist(); }));
+  $$("#sm-view button").forEach(b=>b.addEventListener("click",()=>{ $$("#sm-view button").forEach(x=>x.classList.toggle("on",x===b)); state.smView=b.dataset.v; renderSmaStocks(); }));
+  ["#sm-secsel","#sm-grp"].forEach(s=>$(s).addEventListener("change",renderSmaStocks)); $("#sm-q").addEventListener("input",renderSmaStocks);
+  segInit($("#fl-per"),FLOW_OPTS,state.flow,v=>{ state.flow=v; renderFlow(); });
+  // alerts
+  const al=$("#alerts"), M=DATA.meta;
+  if (M.pending&&M.pending.length) al.append(el("div",{class:"warn",text:`Mã mới chờ xác nhận ngành theo FiinPro (đang tạm xếp theo ICB công khai): ${M.pending.map(p=>`${p.c} → ${p.sec}`).join("; ")}. Thêm dòng tương ứng vào file data/sectors_fiinpro.csv để xác nhận.`}));
+  if (M.unknown&&M.unknown.length) al.append(el("div",{class:"warn",text:`Mã mới chưa xếp được ngành, chưa đưa vào tính toán ngành: ${M.unknown.join(", ")}. Thêm vào file data/sectors_fiinpro.csv.`}));
+  const stale=(Date.now()-new Date(LAST+"T15:00:00+07:00"))/864e5; if (stale>5) al.append(el("div",{class:"warn",text:`Dữ liệu đã ${Math.floor(stale)} ngày chưa cập nhật. Có thể nguồn dữ liệu hoặc lịch tự chạy đang gặp lỗi.`}));
+  const ft=$("#foot"); ft.textContent="";
+  ft.append(el("p",{text:`Nguồn dữ liệu: ${M.source||""}. Phân ngành: ICB cấp 2 theo FiinPro (file xuất ngày 09/11/2026). ${M.n_stocks} mã HOSE, không gồm quỹ và ETF.`}));
+  if (M.no_data&&M.no_data.length) ft.append(el("p",{text:`Mã có trong file phân ngành nhưng không có giao dịch trên HOSE ở phiên gần nhất: ${M.no_data.join(", ")}.`}));
+  ft.append(el("p",{text:"Trang phục vụ mục đích theo dõi cá nhân, không phải khuyến nghị đầu tư. Số liệu tự tính có thể lệch nhỏ so với các nhà cung cấp dữ liệu."}));
+  showTab();
+}
+window.addEventListener("hashchange",showTab);
+let rz; window.addEventListener("resize",()=>{ clearTimeout(rz); rz=setTimeout(()=>{ if(DATA) RENDER[currentTab()](); },150); });
+window.matchMedia("(prefers-color-scheme: dark)").addEventListener("change",()=>{ if(DATA) RENDER[currentTab()](); });
+showTab(); boot();
+</script>
+</body>
+</html>
