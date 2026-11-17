@@ -797,6 +797,13 @@
    "note": "Trả cổ tức năm 2025, tỷ lệ 100:20",
    "ratio": 20.0,
    "type": "STOCKDIV"
+  },
+  {
+   "dividend": 2000.0,
+   "effectiveDate": "2026-11-18",
+   "note": "Trả cổ tức năm 2026 (2000 đ/cp)",
+   "ratio": 20.0,
+   "type": "DIVIDEND"
   }
  ],
  "BAF": [
@@ -9983,6 +9990,13 @@
    "dividend": 3000.0,
    "effectiveDate": "2026-07-28",
    "note": "Trả cổ tức đợt 2/2025 (3000 đ/cp)",
+   "ratio": 30.0,
+   "type": "DIVIDEND"
+  },
+  {
+   "dividend": 3000.0,
+   "effectiveDate": "2026-12-28",
+   "note": "Trả cổ tức năm 2026 (3000 đ/cp)",
    "ratio": 30.0,
    "type": "DIVIDEND"
   }
