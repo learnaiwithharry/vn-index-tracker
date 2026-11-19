@@ -1600,6 +1600,13 @@
    "note": "Trả cổ tức năm 2024 (1055 đ/cp)",
    "ratio": 10.55,
    "type": "DIVIDEND"
+  },
+  {
+   "dividend": 809.0,
+   "effectiveDate": "2026-11-26",
+   "note": "Trả cổ tức năm 2025 (809 đ/cp)",
+   "ratio": 8.09,
+   "type": "DIVIDEND"
   }
  ],
  "BWE": [
@@ -2211,6 +2218,12 @@
    "note": "Trả cổ tức năm 2023 (400 đ/cp)",
    "ratio": 4.0,
    "type": "DIVIDEND"
+  },
+  {
+   "effectiveDate": "2026-11-25",
+   "note": "Phát hành 3,631,173 cp cho CĐHH, giá 10000 đ/cp",
+   "ratio": 20.0,
+   "type": "ISSUE"
   }
  ],
  "CMX": [
@@ -12523,6 +12536,13 @@
    "effectiveDate": "2026-05-20",
    "note": "Trả cổ tức đợt 3/2025 (500 đ/cp)",
    "ratio": 5.0,
+   "type": "DIVIDEND"
+  },
+  {
+   "dividend": 1250.0,
+   "effectiveDate": "2026-11-20",
+   "note": "Trả cổ tức đợt 2/2026 (1250 đ/cp)",
+   "ratio": 12.5,
    "type": "DIVIDEND"
   }
  ],
