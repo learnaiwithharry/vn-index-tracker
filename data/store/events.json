@@ -8849,6 +8849,12 @@
    "note": "Trả cổ tức năm 2025 (600 đ/cp)",
    "ratio": 6.0,
    "type": "DIVIDEND"
+  },
+  {
+   "effectiveDate": "2026-11-23",
+   "note": "Phát hành 56,948,116 cp cho CĐHH, giá 10000 đ/cp",
+   "ratio": 71.8,
+   "type": "ISSUE"
   }
  ],
  "PET": [
@@ -11054,6 +11060,13 @@
    "effectiveDate": "2026-05-26",
    "note": "Trả cổ tức đợt 3/2025 (1000 đ/cp)",
    "ratio": 10.0,
+   "type": "DIVIDEND"
+  },
+  {
+   "dividend": 2000.0,
+   "effectiveDate": "2026-11-23",
+   "note": "Trả cổ tức năm 2026 (2000 đ/cp)",
+   "ratio": 20.0,
    "type": "DIVIDEND"
   }
  ],

@@ -548,7 +548,7 @@
   "YBM",
   "YEG"
  ],
- "fetched_at": "2026-11-19T21:29:15+07:00",
+ "fetched_at": "2026-11-20T16:59:13+07:00",
  "icb_l2": {
   "AAA": "2700",
   "AAM": "3500",
@@ -961,7 +961,7 @@
   "YBM": "1300",
   "YEG": "5500"
  },
- "last_date": "2026-11-19",
+ "last_date": "2026-11-20",
  "listed": {
   "AAA": {
    "listedDate": "2016-11-25",
@@ -1030,6 +1030,10 @@
   "AGR": {
    "listedDate": "2009-12-10",
    "name": "Chứng khoán Agribank"
+  },
+  "AMY": {
+   "listedDate": "2026-11-20",
+   "name": "AISA-US., JSC"
   },
   "ANT": {
    "listedDate": "2026-01-20",
@@ -1102,6 +1106,10 @@
   "BMI": {
    "listedDate": "2008-04-21",
    "name": "Bảo Minh"
+  },
+  "BMJ": {
+   "listedDate": "2026-11-20",
+   "name": "Khoáng sản Miền Đông AHP"
   },
   "BMP": {
    "listedDate": "2006-07-11",
