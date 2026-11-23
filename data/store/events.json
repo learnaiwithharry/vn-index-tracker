@@ -4381,6 +4381,13 @@
    "note": "Tỷ lệ 100:10",
    "ratio": 10.0,
    "type": "KINDDIV"
+  },
+  {
+   "dividend": 1000.0,
+   "effectiveDate": "2026-11-27",
+   "note": "Trả cổ tức đợt 1/2026 (1000 đ/cp)",
+   "ratio": 10.0,
+   "type": "DIVIDEND"
   }
  ],
  "FRT": [
@@ -4585,6 +4592,12 @@
    "note": "Trả cổ tức năm 2025 (1000 đ/cp)",
    "ratio": 10.0,
    "type": "DIVIDEND"
+  },
+  {
+   "effectiveDate": "2026-11-26",
+   "note": "Trả cổ tức năm 2025, tỷ lệ 100:10",
+   "ratio": 10.0,
+   "type": "STOCKDIV"
   }
  ],
  "GDT": [
