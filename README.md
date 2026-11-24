@@ -11,11 +11,16 @@ Trang theo dõi cá nhân, tự cập nhật sau mỗi phiên giao dịch:
 
 | Thành phần | Vai trò |
 |---|---|
-| `scripts/fetch.py` | Tải giá, vốn hóa, sự kiện quyền từ API công khai của VNDirect; rổ VN30/VN100 từ KBS. |
+| `scripts/fetch.py` | Tải giá, vốn hóa, sự kiện quyền từ API công khai của VNDirect; rổ VN30/VN100 từ KBS; VIX từ Cboe (dự phòng FRED, Yahoo). |
 | `data/store/` | Kho dữ liệu lịch sử từ 02/01/2020, lưu ngay trong repo (mỗi tháng một file). |
 | `scripts/compute.py` | Tính các chỉ số và ghi ra `site/data.json`. |
 | `site/index.html` | Trang web, đọc `data.json`. |
 | `.github/workflows/update.yml` | Tự chạy lúc 16:13, 18:37, 20:23 (thứ Hai - thứ Sáu) và 05:00 sáng hôm sau (giờ Việt Nam; GitHub thường trễ 30-60 phút), rồi đăng trang lên GitHub Pages. |
+
+## Phân ngành
+
+- `data/sectors_fiinpro.csv`: 413 mã HOSE theo FiinPro (xuất ngày 09/11/2026).
+- `data/sectors_fiinpro_hnx.csv`: 301 mã HNX theo cùng file FiinPro, dùng sẵn cho đợt chuyển toàn bộ cổ phiếu HNX sang HOSE từ 28/12/2026.
 
 ## Việc cần làm thủ công
 

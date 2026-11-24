@@ -35,9 +35,20 @@ def load():
         events = json.load(open(os.path.join(STORE, "events.json"), encoding="utf-8"))
     except Exception:  # noqa
         events = {}
-    with open(os.path.join(ROOT, "data", "sectors_fiinpro.csv"), encoding="utf-8-sig") as f:
-        sectors = {r["ma"].strip().upper(): (r["nganh_l2"].strip(), r["ten"].strip()) for r in csv.DictReader(f) if r.get("ma")}
-    return df, idx, meta, events, sectors
+    sectors = read_sectors("sectors_fiinpro.csv")
+    try:
+        vix = pd.read_csv(os.path.join(STORE, "index", "VIX.csv"), dtype={"date": str}).set_index("date")["close"].sort_index()
+    except Exception:  # noqa
+        vix = None
+    return df, idx, meta, events, sectors, vix
+
+
+def read_sectors(name):
+    p = os.path.join(ROOT, "data", name)
+    if not os.path.exists(p):
+        return {}
+    with open(p, encoding="utf-8-sig") as f:
+        return {r["ma"].strip().upper(): (r["nganh_l2"].strip(), r["ten"].strip()) for r in csv.DictReader(f) if r.get("ma")}
 
 
 def stock_returns(df, events):
@@ -131,7 +142,9 @@ def sma_gaps(series):
 
 
 def main():
-    df, idx, meta, events, sectors = load()
+    df, idx, meta, events, sectors, vix = load()
+    # Phân ngành FiinPro của các mã HNX (toàn bộ cổ phiếu HNX chuyển sang HOSE từ 28/12/2026)
+    sectors_hnx = {c: v for c, v in read_sectors("sectors_fiinpro_hnx.csv").items() if c not in sectors}
     df, glitch = stock_returns(df, events)
     dmin, dmax = df["date"].min(), df["date"].max()
     dates = [d for d in idx["VNINDEX"].index if d >= dmin]
@@ -144,7 +157,7 @@ def main():
     # ---------- phân ngành (FiinPro; mã mới: tạm theo ICB công khai)
     icb = meta.get("icb_l2", {})
     vote = {}
-    for c, (sec, _) in sectors.items():
+    for c, (sec, _) in list(sectors.items()) + list(sectors_hnx.items()):
         k = icb.get(c)
         if k:
             vote.setdefault(k, {}).setdefault(sec, 0)
@@ -155,13 +168,15 @@ def main():
     for c in sorted(set(df["code"])):
         if c in sectors:
             sec_of[c] = sectors[c][0]
+        elif c in sectors_hnx:
+            sec_of[c] = sectors_hnx[c][0]
         elif icb.get(c) in icb2sec:
             sec_of[c] = icb2sec[icb[c]]
             if c in live:
                 pending.append(c)
         elif c in live:
             unknown.append(c)
-    names = {c: sectors[c][1] if c in sectors else (meta.get("listed", {}).get(c, {}).get("name") or c) for c in set(df["code"])}
+    names = {c: sectors[c][1] if c in sectors else sectors_hnx[c][1] if c in sectors_hnx else (meta.get("listed", {}).get(c, {}).get("name") or c) for c in set(df["code"])}
 
     # ---------- thứ tự ngành cố định theo vốn hóa ngày chốt
     order_p = os.path.join(ROOT, "data", "sector_order.json")
@@ -284,6 +299,16 @@ def main():
     # Ngày gần nhất, 5 phiên gần nhất (1 tuần), 22 phiên gần nhất (1 tháng)
     flow = {"d": period([last], "d"), "w": period(dates[-5:], "w"), "m": period(dates[-22:], "m")}
 
+    # ---------- VIX: với mỗi phiên VN ngày t, dùng giá đóng cửa VIX của phiên Mỹ gần nhất TRƯỚC ngày t
+    # (thị trường Mỹ đóng cửa lúc 3-4 giờ sáng giờ Việt Nam, nên đó là con số đã biết khi phiên VN mở cửa)
+    vix_al, vix_last = [None] * len(dates), None
+    if vix is not None and len(vix):
+        vd = vix.index.values
+        pos = np.searchsorted(vd, np.array(dates), side="left") - 1
+        vix_al = [float(vix.iloc[p]) if p >= 0 else None for p in pos]
+        vix_last = {"date": vix.index[-1], "close": float(vix.iloc[-1]), "prev": float(vix.iloc[-2]),
+                    "recent": [[d, float(v)] for d, v in vix.tail(10).items()], "source": meta.get("vix_source")}
+
     out = {
         "meta": {
             "last_date": last, "generated_at": dt.datetime.now(ICT).isoformat(timespec="minutes"),
@@ -296,7 +321,8 @@ def main():
         },
         "dates": dates,
         "idx": {"VNINDEX": rnd(off), "VN30": rnd(idx["VN30"].reindex(dates).ffill()), "VN100": rnd(idx["VN100"].reindex(dates).ffill()),
-                "EXVIN": rnd(exvin), "VIN": rnd(vin_lv, 3), "VINW": rnd(w * 100, 2), "REP": rnd(rep)},
+                "EXVIN": rnd(exvin), "VIN": rnd(vin_lv, 3), "VINW": rnd(w * 100, 2), "REP": rnd(rep), "VIX": rnd(vix_al)},
+        "vix_last": vix_last,
         "sectors": sec_series,
         "order": order,
         "sma": {"idx": idx_sma, "sec": sec_sma},
