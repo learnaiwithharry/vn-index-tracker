@@ -141,6 +141,47 @@ def fetch_index(code, start):
     return {dt.datetime.fromtimestamp(t, ICT).date().isoformat(): c for t, c in zip(d["t"], d["c"])}
 
 
+def fetch_vix():
+    """Chỉ số VIX (CBOE) theo ngày giao dịch ở Mỹ. Thử lần lượt: CBOE, FRED, Yahoo."""
+    errs = []
+    try:
+        r = sess().get("https://cdn.cboe.com/api/global/us_indices/daily_prices/VIX_History.csv", timeout=40)
+        r.raise_for_status()
+        out = {}
+        for row in csv.DictReader(io.StringIO(r.text)):
+            m, d, y = row["DATE"].split("/")
+            out[f"{y}-{int(m):02d}-{int(d):02d}"] = float(row["CLOSE"])
+        if len(out) > 1000:
+            return out, "CBOE"
+        errs.append("CBOE: too few rows")
+    except Exception as e:  # noqa
+        errs.append(f"CBOE: {e}")
+    try:
+        r = sess().get("https://fred.stlouisfed.org/graph/fredgraph.csv?id=VIXCLS", timeout=40)
+        r.raise_for_status()
+        out = {}
+        for row in csv.reader(io.StringIO(r.text)):
+            if len(row) == 2 and row[0][:2] in ("19", "20") and row[1] not in ("", "."):
+                out[row[0]] = float(row[1])
+        if len(out) > 1000:
+            return out, "FRED"
+        errs.append("FRED: too few rows")
+    except Exception as e:  # noqa
+        errs.append(f"FRED: {e}")
+    try:
+        d = get_json("https://query1.finance.yahoo.com/v8/finance/chart/%5EVIX?range=10y&interval=1d", tries=3)
+        res = d["chart"]["result"][0]
+        out = {}
+        for t, c in zip(res["timestamp"], res["indicators"]["quote"][0]["close"]):
+            if c is not None:
+                out[dt.datetime.fromtimestamp(t, dt.timezone(dt.timedelta(hours=-5))).date().isoformat()] = round(c, 2)
+        if len(out) > 1000:
+            return out, "Yahoo"
+    except Exception as e:  # noqa
+        errs.append(f"Yahoo: {e}")
+    raise RuntimeError("; ".join(errs))
+
+
 # ---------------------------------------------------------------- store
 PX_HEADER = ["date", "code", "fl", "close", "ref", "ceil", "floor", "value_bn", "mcap_bn"]
 
@@ -327,6 +368,25 @@ def main():
         with open(p, "w") as f:
             f.write("date,close\n" + "".join(f"{d},{cur[d]}\n" for d in sorted(cur)))
         print(f"index {ix}: {len(cur)} phiên, mới nhất {max(cur) if cur else None}")
+
+    # ---- VIX (Mỹ)
+    p = os.path.join(STORE, "index", "VIX.csv")
+    cur = {}
+    if os.path.exists(p):
+        with open(p) as f:
+            cur = {r[0]: r[1] for r in csv.reader(f) if r and r[0] != "date"}
+    try:
+        vix, vsrc = fetch_vix()
+        for d, v in vix.items():
+            if d >= "2019-01-01":
+                cur[d] = fmt(v)
+        meta["vix_source"] = vsrc
+    except Exception as e:  # noqa
+        print("  ! VIX:", e)
+    if cur:
+        with open(p, "w") as f:
+            f.write("date,close\n" + "".join(f"{d},{cur[d]}\n" for d in sorted(cur)))
+        print(f"VIX: {len(cur)} phiên, mới nhất {max(cur)} ({meta.get('vix_source')})")
 
     # ---- meta
     members = index_members()

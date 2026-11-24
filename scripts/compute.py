@@ -17,7 +17,7 @@ ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 STORE = os.path.join(ROOT, "data", "store")
 OUT = os.path.join(ROOT, "site", "data.json")
 VIN = ["VIC", "VHM", "VRE", "VPL"]
-BASES = ["2020-03-31", "2022-03-31", "2022-11-15", "2025-04-09"]
+BASES = ["2020-03-31", "2022-03-31", "2022-11-15", "2025-04-09", "2025-08-21"]
 ORDER_DATE = "2026-11-13"   # ngày chốt vốn hóa để xếp thứ tự cột ngành (15/11/2026 là Chủ nhật)
 ICT = dt.timezone(dt.timedelta(hours=7))
 

@@ -2,12 +2,12 @@ name: Cập nhật dữ liệu và đăng trang
 
 on:
   schedule:
-    # Giờ UTC = giờ Việt Nam - 7. GitHub có thể chạy trễ hoặc bỏ lỡ một lượt, nên đặt nhiều lượt:
-    # 16:07, 17:07, 18:37, 20:23 giờ Việt Nam, thứ Hai đến thứ Sáu.
-    - cron: "7 9 * * 1-5"
-    - cron: "7 10 * * 1-5"
+    # Giờ UTC = giờ Việt Nam - 7. GitHub thường chạy trễ 30-60 phút so với lịch.
+    # 16:13, 18:37, 20:23 giờ Việt Nam (thứ Hai - thứ Sáu) và 05:00 sáng hôm sau (thứ Ba - thứ Bảy).
+    - cron: "13 9 * * 1-5"
     - cron: "37 11 * * 1-5"
     - cron: "23 13 * * 1-5"
+    - cron: "0 22 * * 1-5"
   workflow_dispatch:
   push:
     branches: [main]
@@ -32,7 +32,7 @@ jobs:
     timeout-minutes: 30
     environment:
       name: github-pages
-      url: ${{ steps.deploy.outputs.page_url }}
+      url: ${{ steps.deploy.outputs.page_url || steps.deploy2.outputs.page_url }}
     steps:
       - uses: actions/checkout@v5
       - uses: actions/setup-python@v6
@@ -58,6 +58,13 @@ jobs:
         with:
           path: site
       - id: deploy
+        continue-on-error: true
+        uses: actions/deploy-pages@v4
+      - name: Chờ rồi đăng lại nếu GitHub trục trặc
+        if: steps.deploy.outcome == 'failure'
+        run: sleep 90
+      - id: deploy2
+        if: steps.deploy.outcome == 'failure'
         uses: actions/deploy-pages@v4
       - name: Báo lỗi nếu không tải được dữ liệu
         if: steps.fetch.outcome == 'failure'

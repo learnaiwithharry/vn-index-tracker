@@ -15,7 +15,7 @@ Trang theo dõi cá nhân, tự cập nhật sau mỗi phiên giao dịch:
 | `data/store/` | Kho dữ liệu lịch sử từ 02/01/2020, lưu ngay trong repo (mỗi tháng một file). |
 | `scripts/compute.py` | Tính các chỉ số và ghi ra `site/data.json`. |
 | `site/index.html` | Trang web, đọc `data.json`. |
-| `.github/workflows/update.yml` | Tự chạy lúc 16:07, 17:07, 18:37 và 20:23 (giờ Việt Nam) các ngày thứ Hai đến thứ Sáu, rồi đăng trang lên GitHub Pages. |
+| `.github/workflows/update.yml` | Tự chạy lúc 16:13, 18:37, 20:23 (thứ Hai - thứ Sáu) và 05:00 sáng hôm sau (giờ Việt Nam; GitHub thường trễ 30-60 phút), rồi đăng trang lên GitHub Pages. |
 
 ## Việc cần làm thủ công
 
