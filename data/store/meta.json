@@ -548,7 +548,7 @@
   "YBM",
   "YEG"
  ],
- "fetched_at": "2026-11-24T21:33:53+07:00",
+ "fetched_at": "2026-11-25T06:15:13+07:00",
  "icb_l2": {
   "AAA": "2700",
   "AAM": "3500",
@@ -2612,5 +2612,6 @@
    "name": "Tập đoàn Yeah1"
   }
  },
- "source": "VNDirect finfo API; rổ VN30/VN100: KBS"
+ "source": "VNDirect finfo API; rổ VN30/VN100: KBS",
+ "vix_source": "CBOE"
 }
