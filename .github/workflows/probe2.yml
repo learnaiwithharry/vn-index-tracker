@@ -1,0 +1,4 @@
+name: probe2
+on: {push: {branches: [probe2]}}
+jobs:
+  p: {runs-on: ubuntu-latest, steps: [{uses: actions/checkout@v5}, {run: "pip install -q requests && python tools/p2.py"}]}
