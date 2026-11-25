@@ -7640,6 +7640,13 @@
    "note": "Trả cổ tức đợt 2/2025 (1000 đ/cp)",
    "ratio": 10.0,
    "type": "DIVIDEND"
+  },
+  {
+   "dividend": 4000.0,
+   "effectiveDate": "2026-11-26",
+   "note": "Trả cổ tức năm 2026 (4000 đ/cp)",
+   "ratio": 40.0,
+   "type": "DIVIDEND"
   }
  ],
  "MSN": [
