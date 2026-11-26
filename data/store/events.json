@@ -8780,6 +8780,13 @@
    "note": "Trả cổ tức đợt 2/2025 (2000 đ/cp)",
    "ratio": 20.0,
    "type": "DIVIDEND"
+  },
+  {
+   "dividend": 1000.0,
+   "effectiveDate": "2026-11-27",
+   "note": "Trả cổ tức đợt 1/2026 (1000 đ/cp)",
+   "ratio": 10.0,
+   "type": "DIVIDEND"
   }
  ],
  "PDR": [
@@ -14843,6 +14850,14 @@
    "note": "Trả cổ tức năm 2025 (550 đ/cp)",
    "ratio": 5.5,
    "type": "DIVIDEND"
+  }
+ ],
+ "VPX": [
+  {
+   "effectiveDate": "2026-11-27",
+   "note": "Tỷ lệ 100:45",
+   "ratio": 45.0,
+   "type": "KINDDIV"
   }
  ],
  "VRE": [
